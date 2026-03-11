@@ -555,6 +555,8 @@ body {
 
 .fc-temps-min {
     margin-top: 0;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .fc-max-alt {
@@ -577,6 +579,30 @@ body {
     font-weight: 400;
     color: rgba(255, 255, 255, 0.5);
     vertical-align: super;
+}
+
+.fc-extras {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+.fc-wind {
+    font-family: 'Oswald', sans-serif;
+    font-size: 20px;
+    font-weight: 500;
+    color: rgba(180, 220, 255, 0.85);
+    letter-spacing: 1px;
+}
+
+.fc-precip {
+    font-family: 'Oswald', sans-serif;
+    font-size: 20px;
+    font-weight: 500;
+    color: rgba(120, 190, 255, 0.9);
+    letter-spacing: 1px;
 }
 
 .fc-desc {

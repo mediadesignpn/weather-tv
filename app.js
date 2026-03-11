@@ -93,7 +93,7 @@ const WMO_CODES = {
 };
 
 function getWeatherInfo(code) {
-    const entry = WMO_CODES[code] || { icon: () => 'thermometer', desc: 'Desconocido' };
+    const entry = WMO_CODES[code] || { icon: () => 'thermometer', desc: '' };
     return { icon: entry.icon(), desc: entry.desc };
 }
 
@@ -181,7 +181,7 @@ function setCurrentBackground(summary) {
 
 // NWS summary -> Spanish
 function nwsSummarySpanish(summary) {
-    if (!summary) return 'Desconocido';
+    if (!summary) return '';
     const map = {
         'Sunny': 'Soleado', 'Mostly Sunny': 'Mayormente soleado',
         'Partly Sunny': 'Parcialmente soleado', 'Mostly Cloudy': 'Mayormente nublado',
@@ -348,6 +348,16 @@ function parseNwsForecast(xml) {
         minEl.querySelectorAll('value').forEach(v => minTemps.push(parseFloat(v.textContent)));
     }
 
+    // Get precipitation probability per period
+    const precipProbs = [];
+    const precipEl = forecast.querySelector('probability-of-precipitation');
+    if (precipEl) {
+        precipEl.querySelectorAll('value').forEach(v => {
+            const val = v.getAttribute('xsi:nil') === 'true' ? null : parseFloat(v.textContent);
+            precipProbs.push(val);
+        });
+    }
+
     // Get weather summaries for each period
     const summaries = [];
     const weatherEl = forecast.querySelector('weather');
@@ -361,7 +371,7 @@ function parseNwsForecast(xml) {
     const periods = [];
     const timeLayouts = forecast.querySelectorAll('time-layout');
     // Find the layout that has period-name attributes
-    let maxI = 0, minI = 0, sumI = 0;
+    let maxI = 0, minI = 0, sumI = 0, precipI = 0;
     timeLayouts.forEach(tl => {
         const starts = tl.querySelectorAll('start-valid-time');
         starts.forEach(s => {
@@ -372,6 +382,7 @@ function parseNwsForecast(xml) {
                     name: pName,
                     time: s.textContent,
                     summary: summaries[sumI] || '',
+                    precip: precipI < precipProbs.length ? precipProbs[precipI] : null,
                 };
                 if (isNight) {
                     p.temp = minI < minTemps.length ? minTemps[minI] : null;
@@ -381,6 +392,7 @@ function parseNwsForecast(xml) {
                     maxI++;
                 }
                 sumI++;
+                precipI++;
                 periods.push(p);
             }
         });
@@ -417,12 +429,19 @@ function parseNwsCityData(xml) {
 
 async function fetchMainWeather() {
     try {
-        const xml = await fetchNwsDwml(MAIN_CITY.lat, MAIN_CITY.lon);
+        const { lat, lon } = MAIN_CITY;
+        // Fetch NWS and Open-Meteo wind data in parallel
+        const [xml, windData] = await Promise.all([
+            fetchNwsDwml(lat, lon),
+            fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=wind_speed_10m_max&timezone=America%2FChicago&forecast_days=7`)
+                .then(r => r.json()).catch(() => null)
+        ]);
         const current = parseNwsCurrent(xml);
         const forecast = parseNwsForecast(xml);
+        const dailyWind = windData && windData.daily ? windData.daily.wind_speed_10m_max : null;
 
         if (current) renderCurrentWeather(current, forecast);
-        if (forecast) renderForecast(forecast);
+        if (forecast) renderForecast(forecast, dailyWind);
     } catch (err) {
         console.error('NWS main weather error:', err);
         // Fallback to Open-Meteo
@@ -437,7 +456,7 @@ async function fetchMainWeatherFallback() {
             `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
             `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,` +
             `wind_speed_10m,wind_gusts_10m,surface_pressure,uv_index` +
-            `&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max` +
+            `&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,wind_speed_10m_max` +
             `&timezone=America%2FChicago&forecast_days=6`
         );
         const data = await res.json();
@@ -455,11 +474,27 @@ function renderCurrentWeather(current, forecast) {
     document.getElementById('current-temp-big').innerHTML = `${tempC}°<span class="temp-unit">C</span> <span class="temp-separator">/</span> ${tempF}°<span class="temp-unit">F</span>`;
     document.getElementById('current-desc').textContent = current.descEs;
 
-    if (forecast && forecast.maxTemps.length > 0) {
-        document.getElementById('current-hi').innerHTML = `${fToC(forecast.maxTemps[0])}°C / ${Math.round(forecast.maxTemps[0])}°F`;
-    }
-    if (forecast && forecast.minTemps.length > 0) {
-        document.getElementById('current-lo').innerHTML = `${fToC(forecast.minTemps[0])}°C / ${Math.round(forecast.minTemps[0])}°F`;
+    // Get today's max/min from forecast periods matching today's date
+    if (forecast && forecast.periods.length > 0) {
+        const todayStr = new Date().toLocaleDateString('en-CA');
+        let todayMax = null, todayMin = null;
+        for (const p of forecast.periods) {
+            const pDate = new Date(p.time).toLocaleDateString('en-CA');
+            if (pDate !== todayStr) continue;
+            const isNight = p.name.toLowerCase().includes('night') || p.name.toLowerCase().includes('tonight');
+            if (!isNight && p.temp != null) todayMax = p.temp;
+            if (isNight && p.temp != null) todayMin = p.temp;
+        }
+        if (todayMax != null) {
+            document.getElementById('current-hi').innerHTML = `${fToC(todayMax)}°C / ${Math.round(todayMax)}°F`;
+        } else if (forecast.maxTemps.length > 0) {
+            document.getElementById('current-hi').innerHTML = `${fToC(forecast.maxTemps[0])}°C / ${Math.round(forecast.maxTemps[0])}°F`;
+        }
+        if (todayMin != null) {
+            document.getElementById('current-lo').innerHTML = `${fToC(todayMin)}°C / ${Math.round(todayMin)}°F`;
+        } else if (forecast.minTemps.length > 0) {
+            document.getElementById('current-lo').innerHTML = `${fToC(forecast.minTemps[0])}°C / ${Math.round(forecast.minTemps[0])}°F`;
+        }
     }
 
     document.getElementById('d-feels').textContent = current.temperature != null ? `${fToC(current.temperature)}°C / ${tempF}°F` : '--°';
@@ -468,7 +503,21 @@ function renderCurrentWeather(current, forecast) {
     document.getElementById('d-gusts').textContent = current.windGusts != null ? `${Math.round(current.windGusts * 1.60934)} km/h` : '-- km/h';
     document.getElementById('d-dewpoint').textContent = current.dewPoint != null ? `${fToC(current.dewPoint)}°` : '--°';
     document.getElementById('d-pressure').textContent = current.pressure != null ? `${Math.round(current.pressure * 33.8639)} hPa` : '-- hPa';
-    document.getElementById('d-uv').textContent = '--';
+
+    // Precipitation probability from forecast periods (today day & tonight)
+    if (forecast && forecast.periods.length > 0) {
+        let dayPrecip = null, nightPrecip = null;
+        const todayStr = new Date().toLocaleDateString('en-CA');
+        for (const p of forecast.periods) {
+            const pDate = new Date(p.time).toLocaleDateString('en-CA');
+            if (pDate !== todayStr) continue;
+            const isNight = p.name.toLowerCase().includes('night') || p.name.toLowerCase().includes('tonight');
+            if (isNight && nightPrecip === null) nightPrecip = p.precip;
+            if (!isNight && dayPrecip === null) dayPrecip = p.precip;
+        }
+        document.getElementById('d-precip-day').textContent = dayPrecip != null ? `${Math.round(dayPrecip)}%` : '0%';
+        document.getElementById('d-precip-night').textContent = nightPrecip != null ? `${Math.round(nightPrecip)}%` : '0%';
+    }
 
     // Set background image based on weather
     setCurrentBackground(current.summary);
@@ -501,7 +550,7 @@ function renderCurrentWeatherOM(data) {
 // 5-DAY FORECAST (NWS)
 // ============================================================
 
-function renderForecast(forecast) {
+function renderForecast(forecast, dailyWind) {
     const grid = document.getElementById('forecast-grid');
     grid.innerHTML = '';
 
@@ -523,13 +572,13 @@ function renderForecast(forecast) {
 
         // Only start a new day card on daytime periods
         if (!isNightPeriod) {
-            const dayMaxIdx = i;
             const day = {
                 name: p.name,
                 time: p.time,
                 max: p.temp,
                 min: null,
                 summary: p.summary || '',
+                precip: p.precip,
             };
             // Look for the matching night period right after
             if (i + 1 < periods.length) {
@@ -537,6 +586,10 @@ function renderForecast(forecast) {
                 const nextIsNight = nextP.name.toLowerCase().includes('night');
                 if (nextIsNight) {
                     day.min = nextP.temp;
+                    // Use the highest precip between day and night
+                    if (nextP.precip != null) {
+                        day.precip = Math.max(day.precip || 0, nextP.precip);
+                    }
                     i++; // skip night period
                 }
             }
@@ -560,11 +613,25 @@ function renderForecast(forecast) {
         }
     }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     days.forEach((day) => {
         const date = new Date(day.time);
         const dayName = DIAS_CORTO[date.getDay()] || day.name.toUpperCase().substring(0, 3);
         const iconName = nwsSummaryIcon(day.summary);
         const descEs = nwsSummarySpanish(day.summary);
+
+        // Get wind from Open-Meteo dailyWind array (index 0 = today)
+        let windKmh = null;
+        if (dailyWind) {
+            const dayDate = new Date(day.time);
+            dayDate.setHours(0, 0, 0, 0);
+            const diffDays = Math.round((dayDate - today) / 86400000);
+            if (diffDays >= 0 && diffDays < dailyWind.length) {
+                windKmh = Math.round(dailyWind[diffDays]);
+            }
+        }
 
         const card = document.createElement('div');
         card.className = 'forecast-card';
@@ -581,6 +648,10 @@ function renderForecast(forecast) {
                 <span class="fc-min-alt">${Math.round(day.min)}°<span class="fc-temp-unit">F</span></span>
             </div>` : ''}
             <div class="fc-desc">${descEs}</div>
+            <div class="fc-extras">
+                ${windKmh != null ? `<span class="fc-wind">💨 ${windKmh} km/h</span>` : ''}
+                ${day.precip != null && day.precip > 0 ? `<span class="fc-precip">🌧 ${Math.round(day.precip)}%</span>` : ''}
+            </div>
         `;
         grid.appendChild(card);
     });
@@ -609,6 +680,7 @@ function renderForecastOM(data) {
                 <span class="fc-min-alt">${cToF(d.temperature_2m_min[i])}°<span class="fc-temp-unit">F</span></span>
             </div>
             <div class="fc-desc">${info.desc}</div>
+            ${d.wind_speed_10m_max ? `<div class="fc-wind">💨 ${Math.round(d.wind_speed_10m_max[i])} km/h</div>` : ''}
         `;
         grid.appendChild(card);
     }
