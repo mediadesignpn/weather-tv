@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1920, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Centro Meteorológico</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,14 +16,16 @@
     <!-- TOP BAR -->
     <div class="top-bar">
         <div class="top-bar-left">
-            <div class="brand">
-                <img src="logo.png" alt="Weather Border" class="brand-logo">
-            </div>
+            <img src="LA AUTORIDAD EN EL TIEMPO.png" alt="La Autoridad en el Tiempo" class="brand-logo">
         </div>
         <div class="top-bar-center">
             <span id="datetime-display"></span>
         </div>
         <div class="top-bar-right">
+            <div class="powered-by">
+                <span class="powered-by-text">powered by</span>
+                <img src="logo.png" alt="Weather Border" class="powered-by-logo">
+            </div>
             <div class="live-dot"></div>
             <span class="live-text">EN VIVO</span>
             <button class="autocycle-btn" id="autocycle-btn" onclick="toggleAutoCycle()" title="Auto-ciclo OFF — Click para activar">

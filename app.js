@@ -46,8 +46,26 @@ function iconUrl(name) {
     return `${ICON_BASE}/${name}.svg`;
 }
 
+// --- RESPONSIVE SCALING ---
+function getScale() {
+    return Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+}
+
+function rs(baseSize) {
+    return Math.max(Math.round(baseSize * getScale()), Math.round(baseSize * 0.35));
+}
+
+function responsiveZoom(baseZoom) {
+    const w = window.innerWidth;
+    if (w >= 1600) return baseZoom;
+    if (w >= 1200) return baseZoom - 0.5;
+    if (w >= 800) return baseZoom - 1;
+    return baseZoom - 1.5;
+}
+
 function iconImg(name, size) {
-    return `<img src="${iconUrl(name)}" width="${size}" height="${size}" alt="" style="display:block;">`;
+    const s = rs(size);
+    return `<img src="${iconUrl(name)}" width="${s}" height="${s}" alt="" style="display:block;">`;
 }
 
 // Check if it's nighttime
@@ -696,7 +714,8 @@ function initRadar() {
 
     radarMap = L.map('radar-map', {
         center: [29.014, -100.617],
-        zoom: 8,
+        zoom: responsiveZoom(8),
+        zoomSnap: 0.5,
         zoomControl: true,
         attributionControl: false,
     });
@@ -778,11 +797,12 @@ function startRadarAnimation() {
 let coahuilaMap, texasMap;
 
 function createCityMarkerHTML(name, temp, iconName, hi, lo) {
+    const iconSize = rs(32);
     return `
         <div class="city-marker">
             <div class="cm-name">${name}</div>
             <div class="cm-temp-row">
-                <img src="${iconUrl(iconName)}" width="32" height="32" alt="" class="cm-icon-img">
+                <img src="${iconUrl(iconName)}" width="${iconSize}" height="${iconSize}" alt="" class="cm-icon-img">
                 <span class="cm-temp">${temp}°</span>
             </div>
             <div class="cm-hilo">
@@ -794,12 +814,14 @@ function createCityMarkerHTML(name, temp, iconName, hi, lo) {
 }
 
 function addMarkerToMap(map, lat, lon, html) {
+    const w = rs(150);
+    const h = rs(85);
     return L.marker([lat, lon], {
         icon: L.divIcon({
             className: 'city-marker-wrapper',
             html: html,
-            iconSize: [150, 85],
-            iconAnchor: [75, 42],
+            iconSize: [w, h],
+            iconAnchor: [w / 2, h / 2],
         }),
     }).addTo(map);
 }
@@ -808,7 +830,8 @@ function addMarkerToMap(map, lat, lon, html) {
 async function initCoahuilaMap() {
     coahuilaMap = L.map('map-coahuila', {
         center: [28.6, -100.7],
-        zoom: 9,
+        zoom: responsiveZoom(9),
+        zoomSnap: 0.5,
         zoomControl: true,
         attributionControl: false,
     });
@@ -850,7 +873,8 @@ async function initCoahuilaMap() {
 async function initTexasMap() {
     texasMap = L.map('map-texas', {
         center: [28.9, -99.7],
-        zoom: 8,
+        zoom: responsiveZoom(8),
+        zoomSnap: 0.5,
         zoomControl: true,
         attributionControl: false,
     });
@@ -1037,7 +1061,8 @@ async function fetchNWSAlerts() {
 function initAlertsMap() {
     alertsMap = L.map('alerts-map', {
         center: [28.75, -100.45],
-        zoom: 9,
+        zoom: responsiveZoom(9),
+        zoomSnap: 0.5,
         zoomControl: true,
         attributionControl: false,
     });
@@ -1139,6 +1164,18 @@ async function init() {
     // Refresh intervals
     setInterval(fetchMainWeather, 600000);   // 10 min
     setInterval(fetchNWSAlerts, 300000);      // 5 min
+
+    // Handle window resize - update map zoom levels
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            if (radarMap) radarMap.setZoom(responsiveZoom(8));
+            if (coahuilaMap) coahuilaMap.setZoom(responsiveZoom(9));
+            if (texasMap) texasMap.setZoom(responsiveZoom(8));
+            if (alertsMap) alertsMap.setZoom(responsiveZoom(9));
+        }, 250);
+    });
 }
 
 // Fullscreen toggle
