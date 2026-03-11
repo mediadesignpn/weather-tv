@@ -83,6 +83,30 @@ body {
     letter-spacing: 2px;
 }
 
+.autocycle-btn {
+    background: rgba(0, 100, 200, 0.2);
+    border: 1px solid rgba(0, 168, 255, 0.3);
+    border-radius: 8px;
+    color: #5ba3d9;
+    cursor: pointer;
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s;
+}
+
+.autocycle-btn:hover {
+    background: rgba(0, 100, 200, 0.4);
+    color: #00c8ff;
+}
+
+.autocycle-btn.active {
+    background: rgba(0, 200, 100, 0.3);
+    border-color: rgba(0, 255, 128, 0.5);
+    color: #00ff80;
+}
+
 .fullscreen-btn {
     background: rgba(0, 100, 200, 0.2);
     border: 1px solid rgba(0, 168, 255, 0.3);

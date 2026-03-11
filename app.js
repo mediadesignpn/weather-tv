@@ -1000,10 +1000,13 @@ function initAlertsMap() {
 // AUTO CYCLE
 // ============================================================
 
-let autoCycleEnabled = true;
+let autoCycleEnabled = false;
 let autoCycleTimer;
+let autoCycleSeconds = 15;
 
-function startAutoCycle() {
+function startAutoCycle(seconds) {
+    autoCycleSeconds = seconds || autoCycleSeconds;
+    autoCycleEnabled = true;
     if (autoCycleTimer) clearInterval(autoCycleTimer);
     autoCycleTimer = setInterval(() => {
         if (!autoCycleEnabled) return;
@@ -1011,17 +1014,39 @@ function startAutoCycle() {
         const currentIdx = panelOrder.indexOf(activeBtn.dataset.panel);
         const nextIdx = (currentIdx + 1) % panelOrder.length;
         document.querySelector(`.nav-btn[data-panel="${panelOrder[nextIdx]}"]`).click();
-    }, 15000);
+    }, autoCycleSeconds * 1000);
+    updateAutoCycleBtn();
 }
 
-function pauseAutoCycle() {
+function stopAutoCycle() {
     autoCycleEnabled = false;
-    clearTimeout(window._resumeTimer);
-    window._resumeTimer = setTimeout(() => { autoCycleEnabled = true; }, 45000);
+    if (autoCycleTimer) { clearInterval(autoCycleTimer); autoCycleTimer = null; }
+    updateAutoCycleBtn();
 }
 
-contentArea.addEventListener('touchstart', pauseAutoCycle, { passive: true });
-document.querySelector('.sidebar').addEventListener('click', pauseAutoCycle);
+function toggleAutoCycle() {
+    if (autoCycleEnabled) {
+        stopAutoCycle();
+    } else {
+        const input = prompt('Segundos entre cada sección:', autoCycleSeconds);
+        if (input === null) return;
+        const secs = parseInt(input, 10);
+        if (isNaN(secs) || secs < 3) { alert('Mínimo 3 segundos'); return; }
+        startAutoCycle(secs);
+    }
+}
+
+function updateAutoCycleBtn() {
+    const btn = document.getElementById('autocycle-btn');
+    if (!btn) return;
+    if (autoCycleEnabled) {
+        btn.classList.add('active');
+        btn.title = `Auto-ciclo ON (${autoCycleSeconds}s) — Click para detener`;
+    } else {
+        btn.classList.remove('active');
+        btn.title = 'Auto-ciclo OFF — Click para activar';
+    }
+}
 
 // ============================================================
 // INIT
@@ -1038,8 +1063,6 @@ async function init() {
         fetchMainWeather(),
         fetchNWSAlerts(),
     ]);
-
-    startAutoCycle();
 
     // Refresh intervals
     setInterval(fetchMainWeather, 600000);   // 10 min
