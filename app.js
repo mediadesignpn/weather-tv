@@ -24,16 +24,15 @@ function nwsDwmlUrl(lat, lon) {
 // --- CITIES ---
 const COAHUILA_CITIES = [
     { name: 'Acuña',     lat: 29.3241, lon: -100.9319 },
-    { name: 'Jiménez',   lat: 29.0722, lon: -100.6961 },
+    { name: 'Jiménez',   lat: 28.7500, lon: -101.1000 },
     { name: 'Nava',      lat: 28.4219, lon: -100.7678 },
-    { name: 'Guerrero',  lat: 28.3064, lon: -100.3239 },
+    { name: 'Guerrero',  lat: 28.0500, lon: -100.3239 },
     { name: 'Sabinas',   lat: 27.8486, lon: -101.1197 },
 ];
 
 const TEXAS_CITIES = [
     { name: 'Laredo',       lat: 27.5036, lon: -99.5076 },
-    { name: 'Del Rio',      lat: 29.3627, lon: -100.8968 },
-    { name: 'Uvalde',       lat: 29.2097, lon: -99.7862 },
+    { name: 'Uvalde',       lat: 29.2097, lon: -100.2000 },
     { name: 'San Antonio',  lat: 29.4241, lon: -98.4936 },
     { name: 'Cotulla',      lat: 28.4369, lon: -99.2351 },
 ];
@@ -270,8 +269,11 @@ function invalidateActiveMap(target) {
 navBtns.forEach(btn => {
     btn.addEventListener('click', () => {
         const target = btn.dataset.panel;
-        navBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        // Sync both sidebars
+        navBtns.forEach(b => {
+            if (b.dataset.panel === target) b.classList.add('active');
+            else b.classList.remove('active');
+        });
         panels.forEach(p => {
             p.classList.remove('active');
             if (p.id === `panel-${target}`) p.classList.add('active');
@@ -787,25 +789,24 @@ function initRadar() {
 let coahuilaMap, texasMap;
 
 function createCityMarkerHTML(name, temp, iconName, hi, lo) {
-    const iconSize = rs(38);
+    const iconSize = rs(52);
     return `
         <div class="city-marker">
             <div class="cm-name">${name}</div>
-            <div class="cm-temp-row">
+            <div class="cm-content">
                 <img src="${iconUrl(iconName)}" width="${iconSize}" height="${iconSize}" alt="" class="cm-icon-img">
-                <span class="cm-temp">${temp}°</span>
-            </div>
-            <div class="cm-hilo">
-                <span class="cm-hi">▲${hi}°</span>
-                <span class="cm-lo">▼${lo}°</span>
+                <div class="cm-data">
+                    <span class="cm-temp">${temp}°</span>
+                    <span class="cm-lo">${lo}°</span>
+                </div>
             </div>
         </div>
     `;
 }
 
 function addMarkerToMap(map, lat, lon, html) {
-    const w = rs(180);
-    const h = rs(110);
+    const w = rs(240);
+    const h = rs(140);
     return L.marker([lat, lon], {
         icon: L.divIcon({
             className: 'city-marker-wrapper',
@@ -976,6 +977,7 @@ async function fetchNWSAlerts() {
     const alertsList = document.getElementById('alerts-list');
     const alertsCount = document.getElementById('alerts-count');
     const alertsBadge = document.getElementById('alerts-badge');
+    const alertsBadgeRight = document.getElementById('alerts-badge-right');
 
     try {
         const [zoneRes, countyRes] = await Promise.all([
@@ -1003,6 +1005,10 @@ async function fetchNWSAlerts() {
 
         alertsBadge.textContent = alerts.length;
         alertsBadge.style.display = alerts.length > 0 ? 'flex' : 'none';
+        if (alertsBadgeRight) {
+            alertsBadgeRight.textContent = alerts.length;
+            alertsBadgeRight.style.display = alerts.length > 0 ? 'flex' : 'none';
+        }
         alertsCount.textContent = `${alerts.length} alerta${alerts.length !== 1 ? 's' : ''} activa${alerts.length !== 1 ? 's' : ''}`;
 
         if (alerts.length === 0) {

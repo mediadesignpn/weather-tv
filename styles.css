@@ -160,6 +160,7 @@ body {
     -webkit-backdrop-filter: blur(10px);
     border: none;
     border-right: 3px solid transparent;
+    border-left: none;
     color: rgba(255,255,255,0.8);
     cursor: pointer;
     transition: all 0.2s;
@@ -182,6 +183,22 @@ body {
     background: rgba(192,39,45,0.7);
     border-right-color: #fff;
     color: #fff;
+}
+
+/* Right sidebar */
+.side-nav-right {
+    left: auto;
+    right: 0;
+}
+
+.side-nav-right .nav-btn {
+    border-right: none;
+    border-left: 3px solid transparent;
+}
+
+.side-nav-right .nav-btn.active {
+    border-left-color: #fff;
+    border-right-color: transparent;
 }
 
 /* ===== BOTTOM-RIGHT INFO BAR ===== */
@@ -418,9 +435,9 @@ body {
 .forecast-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: clamp(6px, 0.6vw, 14px);
+    gap: 0;
     flex: 1;
-    padding: clamp(10px, 1.2vw, 24px) clamp(16px, 2vw, 40px);
+    padding: clamp(10px, 1.2vw, 24px) clamp(60px, 8vw, 180px);
     align-items: stretch;
 }
 
@@ -428,15 +445,23 @@ body {
     background: rgba(0,0,0,0.3);
     backdrop-filter: blur(8px) saturate(130%);
     -webkit-backdrop-filter: blur(8px) saturate(130%);
-    border-radius: 12px;
+    border-radius: 0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.12);
+    border-right: 1px solid rgba(255,255,255,0.12);
     cursor: pointer;
     transition: transform 0.2s;
+}
+
+.forecast-card:first-child {
+    border-radius: 12px 0 0 12px;
+}
+
+.forecast-card:last-child {
+    border-radius: 0 12px 12px 0;
+    border-right: none;
 }
 
 .forecast-card:hover {
@@ -698,17 +723,13 @@ body {
 
 /* ===== CITY MARKERS ===== */
 .city-marker {
-    background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 8px;
-    padding: clamp(4px, 0.4vw, 8px) clamp(6px, 0.6vw, 12px);
-    min-width: clamp(80px, 7vw, 130px);
-    text-align: center;
+    background: rgba(255,255,255,0.92);
+    border-radius: clamp(6px, 0.5vw, 10px);
+    min-width: clamp(100px, 10vw, 200px);
     font-family: 'Montserrat', sans-serif;
     box-shadow: 0 4px 20px rgba(0,0,0,0.4);
     transition: transform 0.2s;
+    overflow: hidden;
 }
 
 .city-marker:hover {
@@ -716,44 +737,49 @@ body {
 }
 
 .city-marker .cm-name {
-    font-size: clamp(7px, 0.55vw, 11px);
+    background: rgba(192, 39, 45, 0.9);
+    font-size: clamp(9px, 0.75vw, 16px);
     font-weight: 800;
-    color: #ff6b6b;
-    letter-spacing: clamp(0.5px, 0.08vw, 1.5px);
+    color: #fff;
+    letter-spacing: clamp(1px, 0.12vw, 3px);
     text-transform: uppercase;
-    margin-bottom: 2px;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    text-align: center;
+    padding: clamp(3px, 0.3vw, 6px) clamp(6px, 0.5vw, 10px);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
-.city-marker .cm-temp-row {
+.city-marker .cm-content {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: clamp(4px, 0.4vw, 8px);
+    padding: clamp(4px, 0.4vw, 8px) clamp(6px, 0.6vw, 12px);
 }
 
 .city-marker .cm-icon-img { flex-shrink: 0; }
 
+.city-marker .cm-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+}
+
 .city-marker .cm-temp {
     font-family: 'Montserrat', sans-serif;
-    font-size: clamp(14px, 1.4vw, 26px);
-    font-weight: 800;
-    color: #fff;
-    line-height: 1.1;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    font-size: clamp(20px, 2.2vw, 44px);
+    font-weight: 900;
+    color: #c0272d;
+    line-height: 1;
 }
 
-.city-marker .cm-hilo {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    font-size: clamp(7px, 0.55vw, 11px);
+.city-marker .cm-lo {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(12px, 1.2vw, 24px);
     font-weight: 800;
-    margin-top: 2px;
+    color: #555;
+    line-height: 1.2;
 }
-
-.cm-hi { color: #ffaa00; text-shadow: 0 1px 4px rgba(255,170,0,0.4); }
-.cm-lo { color: #00e5ff; text-shadow: 0 1px 4px rgba(0,229,255,0.4); }
 
 /* ===== ALERTS ===== */
 .alerts-layout {
@@ -1076,25 +1102,30 @@ body {
     .det-row { padding: 14px 0; gap: 24px; }
     .card-body-details { padding: 24px 32px !important; }
 
-    /* Forecast panel */
-    .fc-day { font-size: 36px; letter-spacing: 6px; padding: 16px 0; }
-    .fc-date { font-size: 20px; }
-    .fc-icon img { width: 170px; height: 170px; }
-    .fc-max { font-size: 110px; }
-    .fc-min { font-size: 72px; }
-    .fc-max-alt { font-size: 52px; }
-    .fc-min-alt { font-size: 42px; }
-    .fc-desc { font-size: 28px; }
-    .fc-wind { font-size: 24px; }
-    .fc-precip { font-size: 22px; }
-    .fc-temps-label { font-size: 20px; }
-    .forecast-grid { gap: 18px; padding: 28px 48px; }
+    /* Forecast panel - joined cards, big data */
+    .forecast-grid { gap: 0; padding: 16px 160px; }
+    .fc-day { font-size: 30px; letter-spacing: 5px; padding: 12px 0; }
+    .fc-date { font-size: 16px; margin-top: 4px; }
+    .fc-icon { margin: 8px 0; }
+    .fc-icon img { width: 130px; height: 130px; }
+    .fc-temps { padding: 4px 8px 0; }
+    .fc-temps-label { font-size: 16px; }
+    .fc-max { font-size: 90px; }
+    .fc-min { font-size: 58px; }
+    .fc-max-alt { font-size: 42px; }
+    .fc-min-alt { font-size: 34px; }
+    .fc-temps-min { padding-top: 6px; margin-top: 6px; }
+    .fc-desc { font-size: 22px; padding: 6px 6px; }
+    .fc-wind { font-size: 20px; }
+    .fc-precip { font-size: 18px; }
+    .fc-extras { padding: 4px 6px 8px; gap: 2px; }
 
     /* City markers (Coahuila / Texas maps) */
-    .city-marker { min-width: 150px; padding: 8px 12px; border-radius: 10px; }
-    .city-marker .cm-name { font-size: 12px; letter-spacing: 1.5px; }
-    .city-marker .cm-temp { font-size: 28px; }
-    .city-marker .cm-hilo { font-size: 11px; gap: 10px; }
+    .city-marker { min-width: 180px; }
+    .city-marker .cm-name { font-size: 14px; letter-spacing: 2px; padding: 5px 10px; }
+    .city-marker .cm-temp { font-size: 38px; }
+    .city-marker .cm-lo { font-size: 22px; }
+    .city-marker .cm-content { padding: 6px 10px; gap: 6px; }
 
     /* Top banner */
     .banner-logo-img { height: 80px; }
@@ -1120,20 +1151,22 @@ body {
     .det-label { font-size: 20px; }
     .det-val { font-size: 28px; }
 
-    .fc-day { font-size: 42px; }
-    .fc-icon img { width: 200px; height: 200px; }
-    .fc-max { font-size: 130px; }
-    .fc-min { font-size: 86px; }
-    .fc-desc { font-size: 32px; }
+    .forecast-grid { padding: 20px 200px; }
+    .fc-day { font-size: 36px; }
+    .fc-icon img { width: 150px; height: 150px; }
+    .fc-max { font-size: 110px; }
+    .fc-min { font-size: 72px; }
+    .fc-desc { font-size: 28px; }
 
-    .city-marker { min-width: 170px; padding: 10px 14px; }
-    .city-marker .cm-name { font-size: 14px; }
-    .city-marker .cm-temp { font-size: 34px; }
-    .city-marker .cm-hilo { font-size: 13px; }
+    .city-marker { min-width: 210px; }
+    .city-marker .cm-name { font-size: 16px; padding: 6px 12px; }
+    .city-marker .cm-temp { font-size: 46px; }
+    .city-marker .cm-lo { font-size: 26px; }
+    .city-marker .cm-content { padding: 8px 12px; gap: 8px; }
 
     .current-layout {
         gap: 28px;
         padding: 50px 100px;
     }
-    .forecast-grid { gap: 22px; padding: 32px 60px; }
+    .forecast-grid { gap: 18px; padding: 20px 130px; }
 }
