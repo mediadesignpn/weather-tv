@@ -48,7 +48,11 @@ function iconUrl(name) {
 
 // --- RESPONSIVE SCALING ---
 function getScale() {
-    return Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    const base = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    // Boost scale on large screens for better readability
+    if (window.innerWidth >= 2200) return Math.max(base, 1.3);
+    if (window.innerWidth >= 1600) return Math.max(base, 1.1);
+    return base;
 }
 
 function rs(baseSize) {
@@ -252,7 +256,7 @@ updateDateTime();
 
 const navBtns = document.querySelectorAll('.nav-btn');
 const panels = document.querySelectorAll('.panel');
-const panelOrder = ['current', 'radar', 'forecast', 'coahuila', 'texas', 'alerts'];
+const panelOrder = ['inicio', 'current', 'radar', 'forecast', 'coahuila', 'texas', 'alerts'];
 
 function invalidateActiveMap(target) {
     if (target === 'radar') return;
@@ -274,6 +278,9 @@ navBtns.forEach(btn => {
         });
         // Show full-screen weather background on all panels
         document.getElementById('current-bg').classList.add('visible');
+        // Hide header on inicio panel
+        const banner = document.querySelector('.top-banner');
+        if (banner) banner.style.display = target === 'inicio' ? 'none' : '';
         invalidateActiveMap(target);
     });
 });
@@ -780,7 +787,7 @@ function initRadar() {
 let coahuilaMap, texasMap;
 
 function createCityMarkerHTML(name, temp, iconName, hi, lo) {
-    const iconSize = rs(32);
+    const iconSize = rs(38);
     return `
         <div class="city-marker">
             <div class="cm-name">${name}</div>
@@ -797,8 +804,8 @@ function createCityMarkerHTML(name, temp, iconName, hi, lo) {
 }
 
 function addMarkerToMap(map, lat, lon, html) {
-    const w = rs(150);
-    const h = rs(90);
+    const w = rs(180);
+    const h = rs(110);
     return L.marker([lat, lon], {
         icon: L.divIcon({
             className: 'city-marker-wrapper',
@@ -1140,6 +1147,9 @@ function updateAutoCycleBtn() {
 // ============================================================
 
 async function init() {
+    // Hide header on inicio panel at startup
+    const banner = document.querySelector('.top-banner');
+    if (banner) banner.style.display = 'none';
     // Initialize all maps immediately so they are ready when switching panels
     try { initRadar(); } catch (e) { console.error('Radar init error:', e); }
     try { initCoahuilaMap(); } catch (e) { console.error('Coahuila map init error:', e); }

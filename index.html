@@ -30,8 +30,15 @@
     <!-- CONTENT -->
     <div class="content-area">
 
+        <!-- PANEL: Inicio -->
+        <div class="panel active" id="panel-inicio">
+            <video class="inicio-video" id="inicio-video" muted loop playsinline autoplay>
+                <source src="backgrounds/inicio.webm" type="video/webm">
+            </video>
+        </div>
+
         <!-- PANEL: Current -->
-        <div class="panel active" id="panel-current">
+        <div class="panel" id="panel-current">
             <div class="current-layout">
                 <!-- DÍA card -->
                 <div class="white-card" id="card-day">
@@ -132,7 +139,8 @@
 
     <!-- SIDEBAR NAV (transparent lateral right) -->
     <nav class="side-nav">
-        <button class="nav-btn active" data-panel="current" data-label="Hoy" ontouchstart=""><span>HOY</span></button>
+        <button class="nav-btn active" data-panel="inicio" data-label="Inicio" ontouchstart=""><span>INICIO</span></button>
+        <button class="nav-btn" data-panel="current" data-label="Hoy" ontouchstart=""><span>HOY</span></button>
         <button class="nav-btn" data-panel="radar" data-label="Radar" ontouchstart=""><span>RADAR</span></button>
         <button class="nav-btn" data-panel="forecast" data-label="5 Días" ontouchstart=""><span>5 DÍAS</span></button>
         <button class="nav-btn" data-panel="coahuila" data-label="Coahuila" ontouchstart=""><span>COAH</span></button>
