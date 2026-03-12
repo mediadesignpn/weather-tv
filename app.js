@@ -34,7 +34,7 @@ const TEXAS_CITIES = [
     { name: 'Laredo',       lat: 27.5036, lon: -99.5076 },
     { name: 'Uvalde',       lat: 29.2097, lon: -100.2000 },
     { name: 'San Antonio',  lat: 29.4241, lon: -98.4936 },
-    { name: 'Cotulla',      lat: 28.4369, lon: -99.2351 },
+    { name: 'Carrizo Springs', lat: 28.5217, lon: -99.8607 },
 ];
 
 // --- METEOCONS ICON SYSTEM ---
@@ -531,12 +531,12 @@ function renderCurrentWeather(current, forecast) {
         cardNight.style.display = '';
 
         if (nightIcon) {
-            document.getElementById('night-icon').innerHTML = iconImg(nightIcon, 130);
+            document.getElementById('night-icon').innerHTML = iconImg(nightIcon, 170);
         } else {
-            document.getElementById('night-icon').innerHTML = iconImg('clear-night', 130);
+            document.getElementById('night-icon').innerHTML = iconImg('clear-night', 170);
         }
         if (todayMinF != null) {
-            document.getElementById('current-temp-night').innerHTML = `<span class="temp-label temp-label-min">MÍN</span>${fToC(todayMinF)}°<span class="temp-unit">C</span> <span class="temp-separator">/</span> ${Math.round(todayMinF)}°<span class="temp-unit">F</span>`;
+            document.getElementById('current-temp-night').innerHTML = `<span class="temp-label temp-label-min">MÍN</span><span class="temp-stacked"><span class="temp-line">${fToC(todayMinF)}°<span class="temp-unit">C</span></span><span class="temp-line">${Math.round(todayMinF)}°<span class="temp-unit">F</span></span></span>`;
         }
         document.getElementById('d-precip-night').textContent = nightPrecip != null ? `${Math.round(nightPrecip)}%` : '0%';
         if (nightWindF != null) {
@@ -548,21 +548,21 @@ function renderCurrentWeather(current, forecast) {
         cardNight.style.display = '';
 
         // DÍA card: show today's MAX from forecast
-        document.getElementById('current-icon-big').innerHTML = iconImg(dayIcon, 130);
+        document.getElementById('current-icon-big').innerHTML = iconImg(dayIcon, 170);
         if (todayMaxF != null) {
-            document.getElementById('current-temp-big').innerHTML = `<span class="temp-label temp-label-max">MÁX</span>${fToC(todayMaxF)}°<span class="temp-unit">C</span> <span class="temp-separator">/</span> ${Math.round(todayMaxF)}°<span class="temp-unit">F</span>`;
+            document.getElementById('current-temp-big').innerHTML = `<span class="temp-label temp-label-max">MÁX</span><span class="temp-stacked"><span class="temp-line">${fToC(todayMaxF)}°<span class="temp-unit">C</span></span><span class="temp-line">${Math.round(todayMaxF)}°<span class="temp-unit">F</span></span></span>`;
         }
         document.getElementById('d-precip-day').textContent = dayPrecip != null ? `${Math.round(dayPrecip)}%` : '0%';
         document.getElementById('d-wind').textContent = current.windSustained != null ? `${Math.round(current.windSustained * 1.60934)} km/h` : '-- km/h';
 
         // NOCHE card
         if (nightIcon) {
-            document.getElementById('night-icon').innerHTML = iconImg(nightIcon, 130);
+            document.getElementById('night-icon').innerHTML = iconImg(nightIcon, 170);
         } else {
-            document.getElementById('night-icon').innerHTML = iconImg('clear-night', 130);
+            document.getElementById('night-icon').innerHTML = iconImg('clear-night', 170);
         }
         if (todayMinF != null) {
-            document.getElementById('current-temp-night').innerHTML = `<span class="temp-label temp-label-min">MÍN</span>${fToC(todayMinF)}°<span class="temp-unit">C</span> <span class="temp-separator">/</span> ${Math.round(todayMinF)}°<span class="temp-unit">F</span>`;
+            document.getElementById('current-temp-night').innerHTML = `<span class="temp-label temp-label-min">MÍN</span><span class="temp-stacked"><span class="temp-line">${fToC(todayMinF)}°<span class="temp-unit">C</span></span><span class="temp-line">${Math.round(todayMinF)}°<span class="temp-unit">F</span></span></span>`;
         }
         document.getElementById('d-precip-night').textContent = nightPrecip != null ? `${Math.round(nightPrecip)}%` : '0%';
         if (nightWindF != null) {
@@ -606,15 +606,15 @@ function renderCurrentWeatherOM(data) {
     if (isEvening) {
         cardDay.style.display = 'none';
         cardNight.style.display = '';
-        document.getElementById('night-icon').innerHTML = iconImg('clear-night', 130);
-        document.getElementById('current-temp-night').innerHTML = `<span class="temp-label temp-label-min">MÍN</span>${minC}°<span class="temp-unit">C</span> <span class="temp-separator">/</span> ${minF}°<span class="temp-unit">F</span>`;
+        document.getElementById('night-icon').innerHTML = iconImg('clear-night', 170);
+        document.getElementById('current-temp-night').innerHTML = `<span class="temp-label temp-label-min">MÍN</span><span class="temp-stacked"><span class="temp-line">${minC}°<span class="temp-unit">C</span></span><span class="temp-line">${minF}°<span class="temp-unit">F</span></span></span>`;
     } else {
         cardDay.style.display = '';
         cardNight.style.display = '';
-        document.getElementById('current-icon-big').innerHTML = iconImg(info.icon, 130);
-        document.getElementById('current-temp-big').innerHTML = `<span class="temp-label temp-label-max">MÁX</span>${maxC}°<span class="temp-unit">C</span> <span class="temp-separator">/</span> ${maxF}°<span class="temp-unit">F</span>`;
-        document.getElementById('night-icon').innerHTML = iconImg('clear-night', 130);
-        document.getElementById('current-temp-night').innerHTML = `<span class="temp-label temp-label-min">MÍN</span>${minC}°<span class="temp-unit">C</span> <span class="temp-separator">/</span> ${minF}°<span class="temp-unit">F</span>`;
+        document.getElementById('current-icon-big').innerHTML = iconImg(info.icon, 170);
+        document.getElementById('current-temp-big').innerHTML = `<span class="temp-label temp-label-max">MÁX</span><span class="temp-stacked"><span class="temp-line">${maxC}°<span class="temp-unit">C</span></span><span class="temp-line">${maxF}°<span class="temp-unit">F</span></span></span>`;
+        document.getElementById('night-icon').innerHTML = iconImg('clear-night', 170);
+        document.getElementById('current-temp-night').innerHTML = `<span class="temp-label temp-label-min">MÍN</span><span class="temp-stacked"><span class="temp-line">${minC}°<span class="temp-unit">C</span></span><span class="temp-line">${minF}°<span class="temp-unit">F</span></span></span>`;
         document.getElementById('d-wind').textContent = `${Math.round(c.wind_speed_10m)} km/h`;
     }
 
