@@ -490,17 +490,17 @@ body {
     -webkit-backdrop-filter: blur(12px);
     color: #fff;
     font-family: 'Montserrat', sans-serif;
-    font-size: clamp(14px, 1.5vw, 30px);
+    font-size: clamp(18px, 2.2vw, 44px);
     font-weight: 800;
-    letter-spacing: clamp(2px, 0.25vw, 5px);
+    letter-spacing: clamp(3px, 0.4vw, 8px);
     text-align: center;
-    padding: clamp(8px, 0.6vw, 14px) 0;
+    padding: clamp(10px, 0.8vw, 18px) 0;
     width: 100%;
     text-transform: uppercase;
 }
 
 .fc-date {
-    font-size: clamp(10px, 0.85vw, 17px);
+    font-size: clamp(12px, 1.1vw, 22px);
     font-weight: 600;
     color: rgba(255,255,255,0.65);
     letter-spacing: 1px;
@@ -513,8 +513,8 @@ body {
 }
 
 .fc-icon img {
-    width: clamp(60px, 7vw, 140px);
-    height: clamp(60px, 7vw, 140px);
+    width: clamp(70px, 9vw, 180px);
+    height: clamp(70px, 9vw, 180px);
     filter: drop-shadow(0 2px 6px rgba(0,0,0,0.12));
 }
 
@@ -528,7 +528,7 @@ body {
 
 .fc-temps-label {
     font-family: 'Montserrat', sans-serif;
-    font-size: clamp(10px, 0.8vw, 16px);
+    font-size: clamp(12px, 1.1vw, 22px);
     font-weight: 800;
     letter-spacing: clamp(1px, 0.2vw, 4px);
     text-transform: uppercase;
@@ -539,7 +539,7 @@ body {
 
 .fc-max {
     font-family: 'Montserrat', sans-serif;
-    font-size: clamp(36px, 4.8vw, 90px);
+    font-size: clamp(42px, 6vw, 120px);
     font-weight: 800;
     color: #fff;
     line-height: 1;
@@ -548,7 +548,7 @@ body {
 
 .fc-min {
     font-family: 'Montserrat', sans-serif;
-    font-size: clamp(24px, 3.2vw, 60px);
+    font-size: clamp(28px, 4vw, 80px);
     font-weight: 800;
     color: rgba(255,255,255,0.8);
     line-height: 1;
@@ -563,7 +563,7 @@ body {
 
 .fc-max-alt {
     font-family: 'Montserrat', sans-serif;
-    font-size: clamp(16px, 2.2vw, 42px);
+    font-size: clamp(20px, 2.8vw, 56px);
     font-weight: 800;
     color: rgba(255,255,255,0.55);
     text-shadow: 0 1px 4px rgba(0,0,0,0.3);
@@ -572,7 +572,7 @@ body {
 
 .fc-min-alt {
     font-family: 'Montserrat', sans-serif;
-    font-size: clamp(14px, 1.8vw, 34px);
+    font-size: clamp(16px, 2.2vw, 44px);
     font-weight: 800;
     color: rgba(255,255,255,0.5);
     text-shadow: 0 1px 4px rgba(0,0,0,0.3);
@@ -588,7 +588,7 @@ body {
 
 .fc-desc {
     font-family: 'Montserrat', sans-serif;
-    font-size: clamp(13px, 1.2vw, 24px);
+    font-size: clamp(15px, 1.5vw, 30px);
     font-weight: 800;
     color: #fff;
     text-shadow: 0 1px 4px rgba(0,0,0,0.3);
@@ -612,7 +612,7 @@ body {
 
 .fc-wind {
     font-family: 'Montserrat', sans-serif;
-    font-size: clamp(12px, 1vw, 20px);
+    font-size: clamp(14px, 1.2vw, 24px);
     font-weight: 800;
     color: rgba(255,255,255,0.9);
     text-shadow: 0 1px 4px rgba(0,0,0,0.3);
@@ -621,7 +621,7 @@ body {
 
 .fc-precip {
     font-family: 'Montserrat', sans-serif;
-    font-size: clamp(11px, 0.9vw, 18px);
+    font-size: clamp(13px, 1.1vw, 22px);
     font-weight: 800;
     color: rgba(255,255,255,0.9);
     text-shadow: 0 1px 4px rgba(0,0,0,0.3);
