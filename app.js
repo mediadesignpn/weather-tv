@@ -142,59 +142,61 @@ function nwsSummaryIcon(summary) {
 
 // NWS summary -> Background image URL (Unsplash)
 function getWeatherBackground(summary) {
-    if (!summary) return 'backgrounds/default.jpg';
+    if (!summary) return 'backgrounds/default.webm';
     const s = summary.toLowerCase();
     const hour = new Date().getHours();
     const isNight = hour < 6 || hour >= 20;
 
     if (s.includes('tornado')) {
-        return 'backgrounds/tornado.jpg';
+        return 'backgrounds/Tornado.webm';
     }
     if (s.includes('thunder') || s.includes('tstms') || s.includes('storm')) {
-        return 'backgrounds/thunderstorm.jpg';
+        return 'backgrounds/thunderstorm.webm';
     }
     if (s.includes('rain') || s.includes('showers') || s.includes('drizzle')) {
-        return 'backgrounds/rain.jpg';
+        return 'backgrounds/rain.webm';
     }
     if (s.includes('snow') || s.includes('blizzard') || s.includes('ice') || s.includes('sleet') || s.includes('freezing')) {
-        return 'backgrounds/snow.jpg';
+        return 'backgrounds/snow.webm';
     }
     if (s.includes('fog') || s.includes('mist') || s.includes('haze')) {
-        return 'backgrounds/fog.jpg';
+        return 'backgrounds/fog.webm';
     }
     if (s.includes('wind') || s.includes('breezy')) {
-        return 'backgrounds/wind.jpg';
+        return 'backgrounds/wind.webm';
     }
     if (s.includes('overcast') || s.includes('cloudy') && !s.includes('partly')) {
-        return 'backgrounds/overcast.jpg';
+        return 'backgrounds/overcast.webm';
     }
     if (s.includes('partly') || s.includes('mostly cloudy')) {
-        if (isNight) return 'backgrounds/partly-cloudy-night.jpg';
-        return 'backgrounds/partly-cloudy-day.jpg';
+        if (isNight) return 'backgrounds/partly-cloudy-night.webm';
+        return 'backgrounds/partly-cloudy-day.webm';
     }
     if (s.includes('hot')) {
-        return 'backgrounds/hot.jpg';
+        return 'backgrounds/hot.webm';
     }
     // Clear / Sunny / Fair
     if (isNight) {
-        return 'backgrounds/clear-night.jpg';
+        return 'backgrounds/clear-night.webm';
     }
-    return 'backgrounds/clear-day.jpg';
+    return 'backgrounds/clear-day.webm';
 }
 
 function setCurrentBackground(summary) {
     const bg = document.getElementById('current-bg');
+    const video = document.getElementById('bg-video');
     const url = getWeatherBackground(summary);
-    const img = new Image();
-    img.onload = () => {
-        bg.style.backgroundImage = `url(${url})`;
-        // Show if current panel is active
-        const currentPanel = document.getElementById('panel-current');
-        if (currentPanel.classList.contains('active')) {
-            bg.classList.add('visible');
-        }
-    };
-    img.src = url;
+
+    // Hide old image bg
+    bg.classList.remove('visible');
+    bg.style.backgroundImage = '';
+
+    // Set weather condition video
+    if (video.getAttribute('src') !== url) {
+        video.src = url;
+    }
+    video.play().catch(() => {});
+    video.classList.add('visible');
 }
 
 // NWS summary -> Spanish
@@ -239,8 +241,8 @@ function updateDateTime() {
     const dd = now.getDate();
     const mes = MESES[now.getMonth()];
     const yyyy = now.getFullYear();
-    document.getElementById('datetime-display').textContent =
-        `${dia} ${dd} ${mes} ${yyyy}`;
+    const dtEl = document.getElementById('datetime-display');
+    if (dtEl) dtEl.textContent = `${dia} ${dd} ${mes} ${yyyy}`;
 }
 updateDateTime();
 
@@ -253,9 +255,9 @@ const panels = document.querySelectorAll('.panel');
 const panelOrder = ['current', 'radar', 'forecast', 'coahuila', 'texas', 'alerts'];
 
 function invalidateActiveMap(target) {
-    const map = { radar: radarMap, coahuila: coahuilaMap, texas: texasMap, alerts: alertsMap }[target];
+    if (target === 'radar') return;
+    const map = { coahuila: coahuilaMap, texas: texasMap, alerts: alertsMap }[target];
     if (!map) return;
-    // Multiple invalidateSize calls to ensure tiles load after CSS transition
     setTimeout(() => map.invalidateSize(), 100);
     setTimeout(() => map.invalidateSize(), 300);
     setTimeout(() => map.invalidateSize(), 600);
@@ -270,13 +272,8 @@ navBtns.forEach(btn => {
             p.classList.remove('active');
             if (p.id === `panel-${target}`) p.classList.add('active');
         });
-        // Show full-screen weather background on current & forecast panels
-        const bg = document.getElementById('current-bg');
-        if (target === 'current' || target === 'forecast') {
-            bg.classList.add('visible');
-        } else {
-            bg.classList.remove('visible');
-        }
+        // Show full-screen weather background on all panels
+        document.getElementById('current-bg').classList.add('visible');
         invalidateActiveMap(target);
     });
 });
@@ -486,58 +483,98 @@ async function fetchMainWeatherFallback() {
 }
 
 function renderCurrentWeather(current, forecast) {
-    document.getElementById('current-icon-big').innerHTML = iconImg(current.icon, 130);
-    const tempF = Math.round(current.temperature);
-    const tempC = fToC(current.temperature);
-    document.getElementById('current-temp-big').innerHTML = `${tempC}°<span class="temp-unit">C</span> <span class="temp-separator">/</span> ${tempF}°<span class="temp-unit">F</span>`;
-    document.getElementById('current-desc').textContent = current.descEs;
+    const hour = new Date().getHours();
+    const isEvening = hour >= 18; // 6pm - 11:59pm
 
-    // Get today's max/min from forecast periods matching today's date
+    const cardDay = document.getElementById('card-day');
+    const cardNight = document.getElementById('card-night');
+
+    // Get today's max/min from forecast
+    let todayMaxF = null, todayMinF = null, nightIcon = null, nightWindF = null;
+    let dayIcon = current.icon, dayPrecip = null, nightPrecip = null;
+
     if (forecast && forecast.periods.length > 0) {
         const todayStr = new Date().toLocaleDateString('en-CA');
-        let todayMax = null, todayMin = null;
         for (const p of forecast.periods) {
             const pDate = new Date(p.time).toLocaleDateString('en-CA');
             if (pDate !== todayStr) continue;
-            const isNight = p.name.toLowerCase().includes('night') || p.name.toLowerCase().includes('tonight');
-            if (!isNight && p.temp != null) todayMax = p.temp;
-            if (isNight && p.temp != null) todayMin = p.temp;
+            const isNightP = p.name.toLowerCase().includes('night') || p.name.toLowerCase().includes('tonight');
+            if (!isNightP) {
+                if (p.temp != null) todayMaxF = p.temp;
+                if (p.precip != null && dayPrecip === null) dayPrecip = p.precip;
+                if (p.summary) dayIcon = nwsSummaryIcon(p.summary);
+            }
+            if (isNightP) {
+                if (p.temp != null) todayMinF = p.temp;
+                if (p.precip != null && nightPrecip === null) nightPrecip = p.precip;
+                nightIcon = nwsSummaryIcon(p.summary || '');
+                if (p.windSustained != null) nightWindF = p.windSustained;
+            }
         }
-        if (todayMax != null) {
-            document.getElementById('current-hi').innerHTML = `${fToC(todayMax)}°C / ${Math.round(todayMax)}°F`;
-        } else if (forecast.maxTemps.length > 0) {
-            document.getElementById('current-hi').innerHTML = `${fToC(forecast.maxTemps[0])}°C / ${Math.round(forecast.maxTemps[0])}°F`;
+        // Fallback to first max/min if today's periods not found
+        if (todayMaxF == null && forecast.maxTemps.length > 0) todayMaxF = forecast.maxTemps[0];
+        if (todayMinF == null && forecast.minTemps.length > 0) todayMinF = forecast.minTemps[0];
+    }
+
+    if (isEvening) {
+        // After 6pm: hide DÍA, show only NOCHE
+        cardDay.style.display = 'none';
+        cardNight.style.display = '';
+
+        if (nightIcon) {
+            document.getElementById('night-icon').innerHTML = iconImg(nightIcon, 130);
+        } else {
+            document.getElementById('night-icon').innerHTML = iconImg('clear-night', 130);
         }
-        if (todayMin != null) {
-            document.getElementById('current-lo').innerHTML = `${fToC(todayMin)}°C / ${Math.round(todayMin)}°F`;
-        } else if (forecast.minTemps.length > 0) {
-            document.getElementById('current-lo').innerHTML = `${fToC(forecast.minTemps[0])}°C / ${Math.round(forecast.minTemps[0])}°F`;
+        if (todayMinF != null) {
+            document.getElementById('current-temp-night').innerHTML = `<span class="temp-label temp-label-min">MÍN</span>${fToC(todayMinF)}°<span class="temp-unit">C</span> <span class="temp-separator">/</span> ${Math.round(todayMinF)}°<span class="temp-unit">F</span>`;
+        }
+        document.getElementById('d-precip-night').textContent = nightPrecip != null ? `${Math.round(nightPrecip)}%` : '0%';
+        if (nightWindF != null) {
+            document.getElementById('d-wind-night').textContent = `${Math.round(nightWindF * 1.60934)}`;
+        }
+    } else {
+        // Before 6pm: show both DÍA and NOCHE
+        cardDay.style.display = '';
+        cardNight.style.display = '';
+
+        // DÍA card: show today's MAX from forecast
+        document.getElementById('current-icon-big').innerHTML = iconImg(dayIcon, 130);
+        if (todayMaxF != null) {
+            document.getElementById('current-temp-big').innerHTML = `<span class="temp-label temp-label-max">MÁX</span>${fToC(todayMaxF)}°<span class="temp-unit">C</span> <span class="temp-separator">/</span> ${Math.round(todayMaxF)}°<span class="temp-unit">F</span>`;
+        }
+        document.getElementById('d-precip-day').textContent = dayPrecip != null ? `${Math.round(dayPrecip)}%` : '0%';
+        document.getElementById('d-wind').textContent = current.windSustained != null ? `${Math.round(current.windSustained * 1.60934)} km/h` : '-- km/h';
+
+        // NOCHE card
+        if (nightIcon) {
+            document.getElementById('night-icon').innerHTML = iconImg(nightIcon, 130);
+        } else {
+            document.getElementById('night-icon').innerHTML = iconImg('clear-night', 130);
+        }
+        if (todayMinF != null) {
+            document.getElementById('current-temp-night').innerHTML = `<span class="temp-label temp-label-min">MÍN</span>${fToC(todayMinF)}°<span class="temp-unit">C</span> <span class="temp-separator">/</span> ${Math.round(todayMinF)}°<span class="temp-unit">F</span>`;
+        }
+        document.getElementById('d-precip-night').textContent = nightPrecip != null ? `${Math.round(nightPrecip)}%` : '0%';
+        if (nightWindF != null) {
+            document.getElementById('d-wind-night').textContent = `${Math.round(nightWindF * 1.60934)}`;
         }
     }
 
+    // Hidden data
+    document.getElementById('current-desc').textContent = current.descEs;
+    if (todayMaxF != null) document.getElementById('current-hi').innerHTML = `${fToC(todayMaxF)}°C / ${Math.round(todayMaxF)}°F`;
+    if (todayMinF != null) document.getElementById('current-lo').innerHTML = `${fToC(todayMinF)}°C / ${Math.round(todayMinF)}°F`;
+
+    // Details card (always current observations)
+    const tempF = Math.round(current.temperature);
     document.getElementById('d-feels').textContent = current.temperature != null ? `${fToC(current.temperature)}°C / ${tempF}°F` : '--°';
     document.getElementById('d-humidity').textContent = current.humidity != null ? `${Math.round(current.humidity)}%` : '--%';
-    document.getElementById('d-wind').textContent = current.windSustained != null ? `${Math.round(current.windSustained * 1.60934)} km/h` : '-- km/h';
     document.getElementById('d-gusts').textContent = current.windGusts != null ? `${Math.round(current.windGusts * 1.60934)} km/h` : '-- km/h';
     document.getElementById('d-dewpoint').textContent = current.dewPoint != null ? `${fToC(current.dewPoint)}°` : '--°';
     document.getElementById('d-pressure').textContent = current.pressure != null ? `${Math.round(current.pressure * 33.8639)} hPa` : '-- hPa';
 
-    // Precipitation probability from forecast periods (today day & tonight)
-    if (forecast && forecast.periods.length > 0) {
-        let dayPrecip = null, nightPrecip = null;
-        const todayStr = new Date().toLocaleDateString('en-CA');
-        for (const p of forecast.periods) {
-            const pDate = new Date(p.time).toLocaleDateString('en-CA');
-            if (pDate !== todayStr) continue;
-            const isNight = p.name.toLowerCase().includes('night') || p.name.toLowerCase().includes('tonight');
-            if (isNight && nightPrecip === null) nightPrecip = p.precip;
-            if (!isNight && dayPrecip === null) dayPrecip = p.precip;
-        }
-        document.getElementById('d-precip-day').textContent = dayPrecip != null ? `${Math.round(dayPrecip)}%` : '0%';
-        document.getElementById('d-precip-night').textContent = nightPrecip != null ? `${Math.round(nightPrecip)}%` : '0%';
-    }
-
-    // Set background image based on weather
+    // Set background
     setCurrentBackground(current.summary);
 }
 
@@ -546,21 +583,42 @@ function renderCurrentWeatherOM(data) {
     const c = data.current;
     const d = data.daily;
     const info = getWeatherInfo(c.weather_code);
-    const tempC = Math.round(c.temperature_2m);
-    const tempF = cToF(c.temperature_2m);
-    document.getElementById('current-icon-big').innerHTML = iconImg(info.icon, 130);
-    document.getElementById('current-temp-big').innerHTML = `${tempC}°<span class="temp-unit">C</span> <span class="temp-separator">/</span> ${tempF}°<span class="temp-unit">F</span>`;
+    const hour = new Date().getHours();
+    const isEvening = hour >= 18;
+
+    const cardDay = document.getElementById('card-day');
+    const cardNight = document.getElementById('card-night');
+
+    const maxC = Math.round(d.temperature_2m_max[0]);
+    const maxF = cToF(d.temperature_2m_max[0]);
+    const minC = Math.round(d.temperature_2m_min[0]);
+    const minF = cToF(d.temperature_2m_min[0]);
+
+    if (isEvening) {
+        cardDay.style.display = 'none';
+        cardNight.style.display = '';
+        document.getElementById('night-icon').innerHTML = iconImg('clear-night', 130);
+        document.getElementById('current-temp-night').innerHTML = `<span class="temp-label temp-label-min">MÍN</span>${minC}°<span class="temp-unit">C</span> <span class="temp-separator">/</span> ${minF}°<span class="temp-unit">F</span>`;
+    } else {
+        cardDay.style.display = '';
+        cardNight.style.display = '';
+        document.getElementById('current-icon-big').innerHTML = iconImg(info.icon, 130);
+        document.getElementById('current-temp-big').innerHTML = `<span class="temp-label temp-label-max">MÁX</span>${maxC}°<span class="temp-unit">C</span> <span class="temp-separator">/</span> ${maxF}°<span class="temp-unit">F</span>`;
+        document.getElementById('night-icon').innerHTML = iconImg('clear-night', 130);
+        document.getElementById('current-temp-night').innerHTML = `<span class="temp-label temp-label-min">MÍN</span>${minC}°<span class="temp-unit">C</span> <span class="temp-separator">/</span> ${minF}°<span class="temp-unit">F</span>`;
+        document.getElementById('d-wind').textContent = `${Math.round(c.wind_speed_10m)} km/h`;
+    }
+
     document.getElementById('current-desc').textContent = info.desc;
-    document.getElementById('current-hi').innerHTML = `${Math.round(d.temperature_2m_max[0])}°C / ${cToF(d.temperature_2m_max[0])}°F`;
-    document.getElementById('current-lo').innerHTML = `${Math.round(d.temperature_2m_min[0])}°C / ${cToF(d.temperature_2m_min[0])}°F`;
+    document.getElementById('current-hi').innerHTML = `${maxC}°C / ${maxF}°F`;
+    document.getElementById('current-lo').innerHTML = `${minC}°C / ${minF}°F`;
     document.getElementById('d-feels').textContent = `${Math.round(c.apparent_temperature)}°C / ${cToF(c.apparent_temperature)}°F`;
     document.getElementById('d-humidity').textContent = `${c.relative_humidity_2m}%`;
-    document.getElementById('d-wind').textContent = `${Math.round(c.wind_speed_10m)} km/h`;
     document.getElementById('d-gusts').textContent = `${Math.round(c.wind_gusts_10m)} km/h`;
     document.getElementById('d-pressure').textContent = `${Math.round(c.surface_pressure)} hPa`;
-    document.getElementById('d-uv').textContent = `${Math.round(c.uv_index)}`;
+    const uvEl = document.getElementById('d-uv');
+    if (uvEl) uvEl.textContent = `${Math.round(c.uv_index)}`;
 
-    // Fallback background based on WMO desc
     setCurrentBackground(info.desc);
 }
 
@@ -656,12 +714,14 @@ function renderForecast(forecast, dailyWind) {
         card.innerHTML = `
             <div class="fc-day">${dayName}</div>
             <div class="fc-date">${date.getDate()} ${MESES[date.getMonth()]}</div>
-            <div class="fc-icon">${iconImg(iconName, 90)}</div>
+            <div class="fc-icon">${iconImg(iconName, 140)}</div>
             <div class="fc-temps">
+                <span class="fc-temps-label fc-temps-label-max">MÁX</span>
                 <span class="fc-max">${fToC(day.max)}°<span class="fc-temp-unit">C</span></span>
                 <span class="fc-max-alt">${Math.round(day.max)}°<span class="fc-temp-unit">F</span></span>
             </div>
             ${day.min != null ? `<div class="fc-temps fc-temps-min">
+                <span class="fc-temps-label fc-temps-label-min">MÍN</span>
                 <span class="fc-min">${fToC(day.min)}°<span class="fc-temp-unit">C</span></span>
                 <span class="fc-min-alt">${Math.round(day.min)}°<span class="fc-temp-unit">F</span></span>
             </div>` : ''}
@@ -688,12 +748,14 @@ function renderForecastOM(data) {
         card.innerHTML = `
             <div class="fc-day">${DIAS_CORTO[date.getDay()]}</div>
             <div class="fc-date">${date.getDate()} ${MESES[date.getMonth()]}</div>
-            <div class="fc-icon">${iconImg(info.icon, 90)}</div>
+            <div class="fc-icon">${iconImg(info.icon, 140)}</div>
             <div class="fc-temps">
+                <span class="fc-temps-label fc-temps-label-max">MÁX</span>
                 <span class="fc-max">${Math.round(d.temperature_2m_max[i])}°<span class="fc-temp-unit">C</span></span>
                 <span class="fc-max-alt">${cToF(d.temperature_2m_max[i])}°<span class="fc-temp-unit">F</span></span>
             </div>
             <div class="fc-temps fc-temps-min">
+                <span class="fc-temps-label fc-temps-label-min">MÍN</span>
                 <span class="fc-min">${Math.round(d.temperature_2m_min[i])}°<span class="fc-temp-unit">C</span></span>
                 <span class="fc-min-alt">${cToF(d.temperature_2m_min[i])}°<span class="fc-temp-unit">F</span></span>
             </div>
@@ -705,90 +767,11 @@ function renderForecastOM(data) {
 }
 
 // ============================================================
-// RADAR - Leaflet + RainViewer
+// RADAR - Windy Embed
 // ============================================================
 
-let radarMap, radarLayer;
-
 function initRadar() {
-
-    radarMap = L.map('radar-map', {
-        center: [29.014, -100.617],
-        zoom: responsiveZoom(8),
-        zoomSnap: 0.5,
-        zoomControl: true,
-        attributionControl: false,
-    });
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        maxZoom: 18, subdomains: 'abcd',
-    }).addTo(radarMap);
-
-    // City markers on radar
-    [...COAHUILA_CITIES, ...TEXAS_CITIES].forEach(city => {
-        L.circleMarker([city.lat, city.lon], {
-            radius: 5, color: '#00a8ff', fillColor: '#00a8ff', fillOpacity: 0.8, weight: 1,
-        }).bindTooltip(city.name, {
-            permanent: true, direction: 'top', className: 'radar-city-label', offset: [0, -8],
-        }).addTo(radarMap);
-    });
-
-    // Eagle Pass / Piedras Negras main marker
-    L.circleMarker([28.709, -100.4724], {
-        radius: 8, color: '#ff4444', fillColor: '#ff4444', fillOpacity: 0.9, weight: 2,
-    }).bindTooltip('Piedras Negras / Eagle Pass', {
-        permanent: true, direction: 'top', className: 'radar-city-label', offset: [0, -10],
-    }).addTo(radarMap);
-
-    loadRainViewerRadar();
-}
-
-let radarFrames = [];
-let radarHost = '';
-let radarAnimIdx = 0;
-let radarAnimTimer = null;
-
-async function loadRainViewerRadar() {
-    try {
-        const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
-        const data = await res.json();
-        radarHost = data.host;
-        radarFrames = data.radar.past.slice(-12); // Last 12 frames (~2 hrs)
-
-        // Start animation loop
-        startRadarAnimation();
-
-        // Reload frames every 5 min
-        setInterval(async () => {
-            try {
-                const r = await fetch('https://api.rainviewer.com/public/weather-maps.json');
-                const d = await r.json();
-                radarHost = d.host;
-                radarFrames = d.radar.past.slice(-12);
-            } catch (e) {}
-        }, 300000);
-    } catch (err) {
-        console.error('RainViewer error:', err);
-    }
-}
-
-function startRadarAnimation() {
-    if (radarAnimTimer) clearInterval(radarAnimTimer);
-    radarAnimIdx = 0;
-
-    radarAnimTimer = setInterval(() => {
-        if (!radarFrames.length || !radarMap) return;
-
-        if (radarLayer) radarMap.removeLayer(radarLayer);
-
-        const frame = radarFrames[radarAnimIdx];
-        radarLayer = L.tileLayer(
-            `${radarHost}${frame.path}/512/{z}/{x}/{y}/6/1_1.png`,
-            { opacity: 0.7, maxZoom: 12, tileSize: 512, zoomOffset: -1 }
-        ).addTo(radarMap);
-
-        radarAnimIdx = (radarAnimIdx + 1) % radarFrames.length;
-    }, 800); // 800ms per frame
+    // Windy iframe, no JS init needed
 }
 
 // ============================================================
@@ -815,7 +798,7 @@ function createCityMarkerHTML(name, temp, iconName, hi, lo) {
 
 function addMarkerToMap(map, lat, lon, html) {
     const w = rs(150);
-    const h = rs(85);
+    const h = rs(90);
     return L.marker([lat, lon], {
         icon: L.divIcon({
             className: 'city-marker-wrapper',
@@ -836,8 +819,8 @@ async function initCoahuilaMap() {
         attributionControl: false,
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        maxZoom: 18, subdomains: 'abcd',
+    L.tileLayer('https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+        maxZoom: 18,
     }).addTo(coahuilaMap);
 
     try {
@@ -879,8 +862,8 @@ async function initTexasMap() {
         attributionControl: false,
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        maxZoom: 18, subdomains: 'abcd',
+    L.tileLayer('https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+        maxZoom: 18,
     }).addTo(texasMap);
 
     // Fetch NWS data for each Texas city
@@ -975,6 +958,13 @@ function getEventTypeIcon(event) {
     return '⚠️';
 }
 
+function fetchWithTimeout(url, options, timeout = 8000) {
+    return Promise.race([
+        fetch(url, options),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeout))
+    ]);
+}
+
 async function fetchNWSAlerts() {
     const alertsList = document.getElementById('alerts-list');
     const alertsCount = document.getElementById('alerts-count');
@@ -982,10 +972,10 @@ async function fetchNWSAlerts() {
 
     try {
         const [zoneRes, countyRes] = await Promise.all([
-            fetch(`https://api.weather.gov/alerts/active?zone=${NWS_ZONE}`, {
+            fetchWithTimeout(`https://api.weather.gov/alerts/active?zone=${NWS_ZONE}`, {
                 headers: { 'User-Agent': 'WeatherBorder/1.0' }
             }),
-            fetch(`https://api.weather.gov/alerts/active?zone=${NWS_COUNTY}`, {
+            fetchWithTimeout(`https://api.weather.gov/alerts/active?zone=${NWS_COUNTY}`, {
                 headers: { 'User-Agent': 'WeatherBorder/1.0' }
             }),
         ]);
@@ -1151,10 +1141,10 @@ function updateAutoCycleBtn() {
 
 async function init() {
     // Initialize all maps immediately so they are ready when switching panels
-    initRadar();
-    initCoahuilaMap();
-    initTexasMap();
-    initAlertsMap();
+    try { initRadar(); } catch (e) { console.error('Radar init error:', e); }
+    try { initCoahuilaMap(); } catch (e) { console.error('Coahuila map init error:', e); }
+    try { initTexasMap(); } catch (e) { console.error('Texas map init error:', e); }
+    try { initAlertsMap(); } catch (e) { console.error('Alerts map init error:', e); }
 
     await Promise.all([
         fetchMainWeather(),
@@ -1170,7 +1160,6 @@ async function init() {
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
-            if (radarMap) radarMap.setZoom(responsiveZoom(8));
             if (coahuilaMap) coahuilaMap.setZoom(responsiveZoom(9));
             if (texasMap) texasMap.setZoom(responsiveZoom(8));
             if (alertsMap) alertsMap.setZoom(responsiveZoom(9));

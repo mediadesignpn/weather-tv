@@ -3,184 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centro Meteorológico</title>
+    <title>La Autoridad en el Tiempo</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Bebas+Neue&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="styles.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-pI1icGO1xGs9XzeIT_7DTF8-zhqKPQ4"></script>
 </head>
 <body>
-    <!-- Full-screen weather background -->
-    <div class="current-bg" id="current-bg"></div>
+    <!-- Full-screen background -->
+    <div class="bg-layer" id="current-bg"></div>
+    <video class="bg-video" id="bg-video" muted loop playsinline autoplay></video>
 
-    <!-- TOP BAR -->
-    <div class="top-bar">
-        <div class="top-bar-left">
-            <img src="LA AUTORIDAD EN EL TIEMPO.png" alt="La Autoridad en el Tiempo" class="brand-logo">
+    <!-- TOP LOGO BAR -->
+    <div class="top-banner">
+        <div class="top-banner-logo">
+            <img src="LA AUTORIDAD EN EL TIEMPO.png" alt="La Autoridad en el Tiempo" class="banner-logo-img">
         </div>
-        <div class="top-bar-center">
-            <span id="datetime-display"></span>
-        </div>
-        <div class="top-bar-right">
-            <div class="powered-by">
-                <span class="powered-by-text">powered by</span>
-                <img src="logo.png" alt="Weather Border" class="powered-by-logo">
-            </div>
-            <div class="live-dot"></div>
-            <span class="live-text">EN VIVO</span>
-            <button class="autocycle-btn" id="autocycle-btn" onclick="toggleAutoCycle()" title="Auto-ciclo OFF — Click para activar">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
-            </button>
-            <button class="fullscreen-btn" onclick="toggleFullscreen()" title="Pantalla completa">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-            </button>
+        <div class="top-banner-spacer"></div>
+        <div class="top-banner-powered">
+            <span class="powered-text">powered by</span>
+            <img src="logo.png" alt="" class="powered-logo">
         </div>
     </div>
 
-    <!-- LAYOUT: Sidebar + Content -->
-    <div class="app-layout">
-        <!-- TOUCH SIDEBAR -->
-        <nav class="sidebar">
-            <button class="nav-btn active" data-panel="current" ontouchstart="">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                <span>ACTUAL</span>
-            </button>
-            <button class="nav-btn" data-panel="radar" ontouchstart="">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 2a8 8 0 017.75 6H12V4zm0 16a8 8 0 01-7.75-6H12v6.93A8 8 0 0112 20z"/></svg>
-                <span>RADAR</span>
-            </button>
-            <button class="nav-btn" data-panel="forecast" ontouchstart="">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm0 16H5V8h14v11z"/></svg>
-                <span>5 DÍAS</span>
-            </button>
-            <button class="nav-btn" data-panel="coahuila" ontouchstart="">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/></svg>
-                <span>COAHUILA</span>
-            </button>
-            <button class="nav-btn" data-panel="texas" ontouchstart="">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/></svg>
-                <span>TEXAS</span>
-            </button>
-            <button class="nav-btn" data-panel="alerts" ontouchstart="">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-                <span>ALERTAS</span>
-                <div class="alerts-badge" id="alerts-badge" style="display:none;">0</div>
-            </button>
-        </nav>
+    <!-- CONTENT -->
+    <div class="content-area">
 
-        <!-- CONTENT PANELS -->
-        <div class="content-area">
-            <!-- PANEL: Current Conditions -->
-            <div class="panel active" id="panel-current">
-                <div class="panel-grid-current">
-                    <div class="current-main">
-                        <div class="current-location" id="current-location">PIEDRAS NEGRAS / EAGLE PASS</div>
-                        <div class="current-temp-row">
-                            <span class="current-icon-big" id="current-icon-big"></span>
-                            <span class="current-temp-big" id="current-temp-big">--°</span>
-                        </div>
-                        <div class="current-desc" id="current-desc">Cargando...</div>
-                        <div class="current-hilo">
-                            <span class="hi-label">MÁX <span id="current-hi">--°</span></span>
-                            <span class="lo-label">MÍN <span id="current-lo">--°</span></span>
-                        </div>
-                    </div>
-                    <div class="current-details-grid">
-                        <div class="detail-box">
-                            <div class="detail-box-label">SENSACIÓN</div>
-                            <div class="detail-box-value" id="d-feels">--°</div>
-                        </div>
-                        <div class="detail-box">
-                            <div class="detail-box-label">HUMEDAD</div>
-                            <div class="detail-box-value" id="d-humidity">--%</div>
-                        </div>
-                        <div class="detail-box">
-                            <div class="detail-box-label">VIENTO</div>
-                            <div class="detail-box-value" id="d-wind">-- km/h</div>
-                        </div>
-                        <div class="detail-box">
-                            <div class="detail-box-label">RÁFAGAS</div>
-                            <div class="detail-box-value" id="d-gusts">-- km/h</div>
-                        </div>
-                        <div class="detail-box">
-                            <div class="detail-box-label">PUNTO ROCÍO</div>
-                            <div class="detail-box-value" id="d-dewpoint">--°</div>
-                        </div>
-                        <div class="detail-box">
-                            <div class="detail-box-label">PRESIÓN</div>
-                            <div class="detail-box-value" id="d-pressure">-- hPa</div>
-                        </div>
-                        <div class="detail-box">
-                            <div class="detail-box-label">LLUVIA DÍA</div>
-                            <div class="detail-box-value" id="d-precip-day">--%</div>
-                        </div>
-                        <div class="detail-box">
-                            <div class="detail-box-label">LLUVIA NOCHE</div>
-                            <div class="detail-box-value" id="d-precip-night">--%</div>
+        <!-- PANEL: Current -->
+        <div class="panel active" id="panel-current">
+            <div class="current-layout">
+                <!-- DÍA card -->
+                <div class="white-card" id="card-day">
+                    <div class="card-header-red">DÍA</div>
+                    <div class="card-body">
+                        <span class="current-icon-big" id="current-icon-big"></span>
+                        <div class="card-temp" id="current-temp-big">--°</div>
+                        <div class="card-extras">
+                            <span><span id="d-precip-day">--%</span> PROB LLUVIA</span>
+                            <span>VIENTO: <span id="d-wind">--</span> KM/H</span>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- PANEL: Radar -->
-            <div class="panel" id="panel-radar">
-                <div class="panel-full">
-                    <div class="radar-title-bar">
-                        <span>RADAR NWS EN TIEMPO REAL</span>
-                        <span class="radar-subtitle">Región Fronteriza Coahuila - Texas</span>
-                    </div>
-                    <div id="radar-map" class="radar-map-full"></div>
-                </div>
-            </div>
-
-            <!-- PANEL: 5-Day Forecast -->
-            <div class="panel" id="panel-forecast">
-                <div class="forecast-title-bar">PRONÓSTICO EXTENDIDO — 5 DÍAS</div>
-                <div class="forecast-grid" id="forecast-grid">
-                    <!-- Filled by JS -->
-                </div>
-            </div>
-
-            <!-- PANEL: Norte de Coahuila -->
-            <div class="panel" id="panel-coahuila">
-                <div class="region-title-bar">TEMPERATURAS — NORTE DE COAHUILA</div>
-                <div class="region-map-wrap">
-                    <div id="map-coahuila" class="region-map-canvas"></div>
-                </div>
-            </div>
-
-            <!-- PANEL: Sur-Central Texas -->
-            <div class="panel" id="panel-texas">
-                <div class="region-title-bar">TEMPERATURAS — SUR-CENTRAL DE TEXAS</div>
-                <div class="region-map-wrap">
-                    <div id="map-texas" class="region-map-canvas"></div>
-                </div>
-            </div>
-
-            <!-- PANEL: NWS Alerts -->
-            <div class="panel" id="panel-alerts">
-                <div class="alerts-layout">
-                    <div class="alerts-sidebar-panel">
-                        <div class="alerts-title-bar">
-                            <span>ALERTAS NWS — MAVERICK COUNTY, TX</span>
-                            <span class="alerts-count" id="alerts-count">Cargando...</span>
-                        </div>
-                        <div class="alerts-list" id="alerts-list">
-                            <div class="no-alerts">
-                                <div class="no-alerts-icon">⏳</div>
-                                <div class="no-alerts-text">CARGANDO ALERTAS...</div>
-                            </div>
+                <!-- NOCHE card -->
+                <div class="white-card" id="card-night">
+                    <div class="card-header-red">NOCHE</div>
+                    <div class="card-body">
+                        <span class="night-icon" id="night-icon"></span>
+                        <div class="card-temp card-temp-night" id="current-temp-night">--°</div>
+                        <div class="card-extras">
+                            <span><span id="d-precip-night">--%</span> PROB LLUVIA</span>
+                            <span>VIENTO: <span id="d-wind-night">--</span> KM/H</span>
                         </div>
                     </div>
-                    <div class="alerts-map-panel">
-                        <div id="alerts-map" class="alerts-map-canvas"></div>
+                </div>
+                <!-- DETALLES card -->
+                <div class="white-card white-card-details">
+                    <div class="card-header-red">DETALLES</div>
+                    <div class="card-body card-body-details">
+                        <div class="det-row"><span class="det-label">SENSACIÓN</span><span class="det-val" id="d-feels">--°</span></div>
+                        <div class="det-row"><span class="det-label">HUMEDAD</span><span class="det-val" id="d-humidity">--%</span></div>
+                        <div class="det-row"><span class="det-label">RÁFAGAS</span><span class="det-val" id="d-gusts">-- km/h</span></div>
+                        <div class="det-row"><span class="det-label">PUNTO ROCÍO</span><span class="det-val" id="d-dewpoint">--°</span></div>
+                        <div class="det-row"><span class="det-label">PRESIÓN</span><span class="det-val" id="d-pressure">-- hPa</span></div>
                     </div>
+                </div>
+            </div>
+            <div style="display:none">
+                <span id="current-location">PIEDRAS NEGRAS / EAGLE PASS</span>
+                <span id="current-desc"></span>
+                <span id="current-hi"></span>
+                <span id="current-lo"></span>
+            </div>
+        </div>
+
+        <!-- PANEL: Radar (Windy) -->
+        <div class="panel" id="panel-radar">
+            <div class="panel-full-map">
+                <iframe id="windy-radar"
+                    class="map-fill"
+                    src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=km/h&zoom=9&overlay=radar&product=radar&level=surface&lat=28.588&lon=-100.867"
+                    frameborder="0"
+                    allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+
+        <!-- PANEL: Forecast -->
+        <div class="panel" id="panel-forecast">
+            <div class="forecast-grid" id="forecast-grid"></div>
+        </div>
+
+        <!-- PANEL: Coahuila -->
+        <div class="panel" id="panel-coahuila">
+            <div class="panel-full-map">
+                <div id="map-coahuila" class="map-fill"></div>
+            </div>
+        </div>
+
+        <!-- PANEL: Texas -->
+        <div class="panel" id="panel-texas">
+            <div class="panel-full-map">
+                <div id="map-texas" class="map-fill"></div>
+            </div>
+        </div>
+
+        <!-- PANEL: Alerts -->
+        <div class="panel" id="panel-alerts">
+            <div class="alerts-layout">
+                <div class="alerts-col">
+                    <div class="alerts-title-bar">
+                        <span>ALERTAS NWS — MAVERICK COUNTY, TX</span>
+                        <span class="alerts-count" id="alerts-count">Cargando...</span>
+                    </div>
+                    <div class="alerts-list" id="alerts-list">
+                        <div class="no-alerts">
+                            <div class="no-alerts-icon">⏳</div>
+                            <div class="no-alerts-text">CARGANDO ALERTAS...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alerts-map-col">
+                    <div id="alerts-map" class="map-fill"></div>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- SIDEBAR NAV (transparent lateral right) -->
+    <nav class="side-nav">
+        <button class="nav-btn active" data-panel="current" data-label="Hoy" ontouchstart=""><span>HOY</span></button>
+        <button class="nav-btn" data-panel="radar" data-label="Radar" ontouchstart=""><span>RADAR</span></button>
+        <button class="nav-btn" data-panel="forecast" data-label="5 Días" ontouchstart=""><span>5 DÍAS</span></button>
+        <button class="nav-btn" data-panel="coahuila" data-label="Coahuila" ontouchstart=""><span>COAH</span></button>
+        <button class="nav-btn" data-panel="texas" data-label="Texas" ontouchstart=""><span>TEXAS</span></button>
+        <button class="nav-btn" data-panel="alerts" data-label="Alertas" ontouchstart="">
+            <span>ALERTAS</span>
+            <div class="alerts-badge" id="alerts-badge" style="display:none;">0</div>
+        </button>
+    </nav>
+
+
+    <!-- TOOLBAR (hidden until hover) -->
+    <div class="toolbar-float">
+        <button class="tb-btn" id="autocycle-btn" onclick="toggleAutoCycle()" title="Auto-ciclo">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+        </button>
+        <button class="tb-btn" onclick="toggleFullscreen()" title="Pantalla completa">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+        </button>
+        <button class="tb-btn" id="test-bg-btn" onclick="testNextBg()" title="Test fondos">
+            <span style="font-size:10px;font-weight:800;">TEST</span>
+        </button>
+        <span class="tb-label" id="test-bg-label" style="color:#fff;font-size:10px;font-weight:700;padding:4px 6px;"></span>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="app.js"></script>
+    <script>
+    // Update banner label + retrigger card animations on nav
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const label = btn.dataset.label;
+            const bannerEl = document.getElementById('banner-section');
+            if (label && bannerEl) {
+                bannerEl.textContent = label;
+            }
+            // Always show bg
+            document.getElementById('current-bg').classList.add('visible');
+
+            // Retrigger entrance animations
+            const target = btn.dataset.panel;
+            const panel = document.getElementById('panel-' + target);
+            if (!panel) return;
+
+            let items = [];
+            if (target === 'current') {
+                items = panel.querySelectorAll('.white-card');
+            } else if (target === 'forecast') {
+                items = panel.querySelectorAll('.forecast-card');
+            }
+
+            items.forEach(el => {
+                el.style.animation = 'none';
+                el.offsetHeight; // force reflow
+                el.style.animation = '';
+            });
+        });
+    });
+    // --- TEST BACKGROUNDS ---
+    const TEST_BGS = [
+        { name: 'Despejado Día', file: 'backgrounds/clear-day.webm' },
+        { name: 'Despejado Noche', file: 'backgrounds/clear-night.webm' },
+        { name: 'Parc. Nublado Día', file: 'backgrounds/partly-cloudy-day.webm' },
+        { name: 'Parc. Nublado Noche', file: 'backgrounds/partly-cloudy-night.webm' },
+        { name: 'Nublado', file: 'backgrounds/overcast.webm' },
+        { name: 'Lluvia', file: 'backgrounds/rain.webm' },
+        { name: 'Tormenta', file: 'backgrounds/thunderstorm.webm' },
+        { name: 'Nieve', file: 'backgrounds/snow.webm' },
+        { name: 'Neblina', file: 'backgrounds/fog.webm' },
+        { name: 'Viento', file: 'backgrounds/wind.webm' },
+        { name: 'Calor', file: 'backgrounds/hot.webm' },
+        { name: 'Tornado', file: 'backgrounds/Tornado.webm' },
+        { name: 'Noche (estrellas)', file: 'backgrounds/night.webm' },
+        { name: 'Default', file: 'backgrounds/default.webm' },
+    ];
+    let testBgIndex = -1;
+    function testNextBg() {
+        testBgIndex = (testBgIndex + 1) % TEST_BGS.length;
+        const item = TEST_BGS[testBgIndex];
+        const video = document.getElementById('bg-video');
+        video.src = item.file;
+        video.play().catch(() => {});
+        video.classList.add('visible');
+        document.getElementById('test-bg-label').textContent = item.name;
+    }
+    </script>
 </body>
 </html>
