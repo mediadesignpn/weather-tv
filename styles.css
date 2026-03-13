@@ -281,9 +281,23 @@ body {
 /* ===== PANEL: CURRENT (DÍA / NOCHE cards) ===== */
 #panel-current { padding: 0; }
 
+.current-location-bar {
+    background: rgba(192, 39, 45, 0.85);
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(16px, 1.8vw, 36px);
+    font-weight: 800;
+    letter-spacing: clamp(3px, 0.5vw, 10px);
+    text-align: center;
+    padding: clamp(8px, 0.6vw, 14px) 0;
+    text-transform: uppercase;
+    position: relative;
+    z-index: 5;
+}
+
 .current-layout {
     display: flex;
-    height: 100%;
+    flex: 1;
     align-items: center;
     justify-content: center;
     gap: clamp(8px, 0.8vw, 16px);
@@ -357,8 +371,8 @@ body {
 
 .card-extras span {
     font-family: 'Montserrat', sans-serif;
-    font-size: clamp(12px, 1.2vw, 24px);
-    font-weight: 700;
+    font-size: clamp(16px, 1.6vw, 32px);
+    font-weight: 800;
     color: rgba(255,255,255,0.85);
     text-shadow: 0 1px 4px rgba(0,0,0,0.3);
     letter-spacing: clamp(0.5px, 0.08vw, 1.5px);
@@ -430,11 +444,11 @@ body {
 .temp-label {
     display: block;
     font-family: 'Montserrat', sans-serif;
-    font-size: clamp(10px, 0.8vw, 16px);
+    font-size: clamp(14px, 1.4vw, 28px);
     font-weight: 800;
-    letter-spacing: clamp(1px, 0.15vw, 3px);
+    letter-spacing: clamp(2px, 0.3vw, 6px);
     text-transform: uppercase;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
 }
 
 .temp-label-max { color: #ffaa00; text-shadow: 0 1px 8px rgba(255,170,0,0.5); }
@@ -442,19 +456,15 @@ body {
 
 /* ===== PANEL: FORECAST (5 white columns) ===== */
 
-#panel-forecast {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
 
 .forecast-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 0;
-    width: 100%;
+    flex: 1;
     padding: clamp(10px, 1.2vw, 24px) clamp(60px, 8vw, 180px);
     align-items: stretch;
+    align-content: center;
 }
 
 .forecast-card {
@@ -462,7 +472,7 @@ body {
     backdrop-filter: blur(8px) saturate(130%);
     -webkit-backdrop-filter: blur(8px) saturate(130%);
     border-radius: 0;
-    overflow: hidden;
+    overflow: visible;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -528,7 +538,7 @@ body {
 
 .fc-temps-label {
     font-family: 'Montserrat', sans-serif;
-    font-size: clamp(12px, 1.1vw, 22px);
+    font-size: clamp(14px, 1.4vw, 28px);
     font-weight: 800;
     letter-spacing: clamp(1px, 0.2vw, 4px);
     text-transform: uppercase;
@@ -599,7 +609,6 @@ body {
     padding: clamp(4px, 0.3vw, 8px) clamp(4px, 0.4vw, 8px);
     border-top: 1px solid rgba(255,255,255,0.15);
     width: 100%;
-    margin-top: auto;
 }
 
 .fc-extras {
@@ -612,7 +621,7 @@ body {
 
 .fc-wind {
     font-family: 'Montserrat', sans-serif;
-    font-size: clamp(14px, 1.2vw, 24px);
+    font-size: clamp(16px, 1.5vw, 30px);
     font-weight: 800;
     color: rgba(255,255,255,0.9);
     text-shadow: 0 1px 4px rgba(0,0,0,0.3);
@@ -621,11 +630,28 @@ body {
 
 .fc-precip {
     font-family: 'Montserrat', sans-serif;
-    font-size: clamp(13px, 1.1vw, 22px);
+    font-size: clamp(15px, 1.4vw, 28px);
     font-weight: 800;
     color: rgba(255,255,255,0.9);
     text-shadow: 0 1px 4px rgba(0,0,0,0.3);
     letter-spacing: 0.5px;
+}
+
+.fc-bottom {
+    display: flex;
+    justify-content: center;
+    gap: clamp(12px, 1.5vw, 30px);
+    padding: clamp(6px, 0.5vw, 12px) clamp(8px, 0.6vw, 14px);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    width: 100%;
+}
+
+.fc-bottom span {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(13px, 1.2vw, 24px);
+    font-weight: 800;
+    color: rgba(255,255,255,0.85);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
 
 /* ===== MAPS ===== */
@@ -774,27 +800,35 @@ body {
 
 .city-marker .cm-icon-img { flex-shrink: 0; }
 
-.city-marker .cm-data {
+.city-marker .cm-hilo {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    line-height: 1;
+    gap: clamp(4px, 0.4vw, 8px);
 }
 
-.city-marker .cm-temp {
+.city-marker .cm-hi {
     font-family: 'Montserrat', sans-serif;
-    font-size: clamp(20px, 2.2vw, 44px);
-    font-weight: 900;
+    font-size: clamp(14px, 1.4vw, 28px);
+    font-weight: 800;
     color: #c0272d;
-    line-height: 1;
 }
 
 .city-marker .cm-lo {
     font-family: 'Montserrat', sans-serif;
-    font-size: clamp(12px, 1.2vw, 24px);
+    font-size: clamp(14px, 1.4vw, 28px);
     font-weight: 800;
-    color: #555;
-    line-height: 1.2;
+    color: #2a7ab5;
+}
+
+.city-marker .cm-actual-bar {
+    background: rgba(192, 39, 45, 0.15);
+    border-top: 2px solid rgba(192, 39, 45, 0.3);
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(22px, 2.4vw, 48px);
+    font-weight: 900;
+    color: #c0272d;
+    text-align: center;
+    padding: clamp(2px, 0.2vw, 4px) 0;
+    line-height: 1.1;
 }
 
 /* ===== ALERTS ===== */
@@ -1134,7 +1168,7 @@ body {
     .white-card-details { max-width: 580px; }
     .card-header-red { font-size: 46px; letter-spacing: 14px; padding: 18px 0; }
     .card-temp { font-size: 140px; }
-    .card-extras span { font-size: 28px; }
+    .card-extras span { font-size: 34px; }
     .card-body { padding: 44px 32px; gap: 14px; }
 
     /* Details card */
@@ -1150,29 +1184,30 @@ body {
     .fc-icon { margin: 8px 0; }
     .fc-icon img { width: 130px; height: 130px; }
     .fc-temps { padding: 4px 8px 0; }
-    .fc-temps-label { font-size: 16px; }
+    .fc-temps-label { font-size: 24px; }
     .fc-max { font-size: 90px; }
     .fc-min { font-size: 58px; }
     .fc-max-alt { font-size: 42px; }
     .fc-min-alt { font-size: 34px; }
     .fc-temps-min { padding-top: 6px; margin-top: 6px; }
     .fc-desc { font-size: 22px; padding: 6px 6px; }
-    .fc-wind { font-size: 20px; }
-    .fc-precip { font-size: 18px; }
+    .fc-wind { font-size: 26px; }
+    .fc-precip { font-size: 24px; }
     .fc-extras { padding: 4px 6px 8px; gap: 2px; }
 
     /* City markers (Coahuila / Texas maps) */
     .city-marker { min-width: 180px; }
     .city-marker .cm-name { font-size: 14px; letter-spacing: 2px; padding: 5px 10px; }
-    .city-marker .cm-temp { font-size: 38px; }
-    .city-marker .cm-lo { font-size: 22px; }
+    .city-marker .cm-hi { font-size: 24px; }
+    .city-marker .cm-lo { font-size: 24px; }
     .city-marker .cm-content { padding: 6px 10px; gap: 6px; }
+    .city-marker .cm-actual-bar { font-size: 42px; padding: 4px 0; }
 
     /* Top banner */
     .banner-logo-img { height: 80px; }
 
     /* Temp labels */
-    .temp-label { font-size: 20px; }
+    .temp-label { font-size: 30px; }
 
     /* Keep cards centered */
     .current-layout {
@@ -1187,7 +1222,8 @@ body {
     .white-card-details { max-width: 620px; }
     .card-header-red { font-size: 50px; letter-spacing: 14px; padding: 18px 0; }
     .card-temp { font-size: 160px; }
-    .card-extras span { font-size: 30px; }
+    .card-extras span { font-size: 38px; }
+    .temp-label { font-size: 36px; }
     .card-body { padding: 48px 32px; gap: 14px; }
 
     .det-label { font-size: 24px; }
@@ -1203,9 +1239,10 @@ body {
 
     .city-marker { min-width: 210px; }
     .city-marker .cm-name { font-size: 16px; padding: 6px 12px; }
-    .city-marker .cm-temp { font-size: 46px; }
-    .city-marker .cm-lo { font-size: 26px; }
+    .city-marker .cm-hi { font-size: 28px; }
+    .city-marker .cm-lo { font-size: 28px; }
     .city-marker .cm-content { padding: 8px 12px; gap: 8px; }
+    .city-marker .cm-actual-bar { font-size: 50px; padding: 5px 0; }
 
     .current-layout {
         gap: 28px;

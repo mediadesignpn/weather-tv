@@ -24,15 +24,15 @@ function nwsDwmlUrl(lat, lon) {
 // --- CITIES ---
 const COAHUILA_CITIES = [
     { name: 'Acuña',     lat: 29.3241, lon: -100.9319 },
-    { name: 'Jiménez',   lat: 28.7500, lon: -101.1000 },
+    { name: 'Jiménez',   lat: 28.8500, lon: -101.3500 },
     { name: 'Nava',      lat: 28.4219, lon: -100.7678 },
-    { name: 'Guerrero',  lat: 28.0500, lon: -100.3239 },
+    { name: 'Guerrero',  lat: 27.8500, lon: -100.1500 },
     { name: 'Sabinas',   lat: 27.8486, lon: -101.1197 },
 ];
 
 const TEXAS_CITIES = [
     { name: 'Laredo',       lat: 27.5036, lon: -99.5076 },
-    { name: 'Uvalde',       lat: 29.2097, lon: -100.2000 },
+    { name: 'Uvalde',       lat: 29.4500, lon: -100.2000 },
     { name: 'San Antonio',  lat: 29.4241, lon: -98.4936 },
     { name: 'Carrizo Springs', lat: 28.5217, lon: -99.8607 },
 ];
@@ -455,17 +455,18 @@ async function fetchMainWeather() {
     try {
         const { lat, lon } = MAIN_CITY;
         // Fetch NWS and Open-Meteo wind data in parallel
-        const [xml, windData] = await Promise.all([
+        const [xml, omData] = await Promise.all([
             fetchNwsDwml(lat, lon),
-            fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=wind_speed_10m_max&timezone=America%2FChicago&forecast_days=7`)
+            fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=wind_speed_10m_max,precipitation_probability_max&timezone=America%2FChicago&forecast_days=7`)
                 .then(r => r.json()).catch(() => null)
         ]);
         const current = parseNwsCurrent(xml);
         const forecast = parseNwsForecast(xml);
-        const dailyWind = windData && windData.daily ? windData.daily.wind_speed_10m_max : null;
+        const dailyWind = omData && omData.daily ? omData.daily.wind_speed_10m_max : null;
+        const dailyPrecip = omData && omData.daily ? omData.daily.precipitation_probability_max : null;
 
         if (current) renderCurrentWeather(current, forecast);
-        if (forecast) renderForecast(forecast, dailyWind);
+        if (forecast) renderForecast(forecast, dailyWind, dailyPrecip);
     } catch (err) {
         console.error('NWS main weather error:', err);
         // Fallback to Open-Meteo
@@ -635,7 +636,7 @@ function renderCurrentWeatherOM(data) {
 // 5-DAY FORECAST (NWS)
 // ============================================================
 
-function renderForecast(forecast, dailyWind) {
+function renderForecast(forecast, dailyWind, dailyPrecip) {
     const grid = document.getElementById('forecast-grid');
     grid.innerHTML = '';
 
@@ -707,15 +708,17 @@ function renderForecast(forecast, dailyWind) {
         const iconName = nwsSummaryIcon(day.summary);
         const descEs = nwsSummarySpanish(day.summary);
 
-        // Get wind from Open-Meteo dailyWind array (index 0 = today)
+        // Get wind and precip from Open-Meteo daily arrays (index 0 = today)
         let windKmh = null;
-        if (dailyWind) {
-            const dayDate = new Date(day.time);
-            dayDate.setHours(0, 0, 0, 0);
-            const diffDays = Math.round((dayDate - today) / 86400000);
-            if (diffDays >= 0 && diffDays < dailyWind.length) {
-                windKmh = Math.round(dailyWind[diffDays]);
-            }
+        let precipProb = day.precip;
+        const dayDate = new Date(day.time);
+        dayDate.setHours(0, 0, 0, 0);
+        const diffDays = Math.round((dayDate - today) / 86400000);
+        if (dailyWind && diffDays >= 0 && diffDays < dailyWind.length) {
+            windKmh = Math.round(dailyWind[diffDays]);
+        }
+        if (dailyPrecip && diffDays >= 0 && diffDays < dailyPrecip.length) {
+            precipProb = dailyPrecip[diffDays];
         }
 
         const card = document.createElement('div');
@@ -735,9 +738,9 @@ function renderForecast(forecast, dailyWind) {
                 <span class="fc-min-alt">${Math.round(day.min)}°<span class="fc-temp-unit">F</span></span>
             </div>` : ''}
             <div class="fc-desc">${descEs}</div>
-            <div class="fc-extras">
-                ${windKmh != null ? `<span class="fc-wind">💨 ${windKmh} km/h</span>` : ''}
-                ${day.precip != null && day.precip > 0 ? `<span class="fc-precip">🌧 ${Math.round(day.precip)}%</span>` : ''}
+            <div class="fc-bottom">
+                <span>🌧 ${precipProb != null ? Math.round(precipProb) : 0}%</span>
+                ${windKmh != null ? `<span>💨 ${windKmh} km/h</span>` : ''}
             </div>
         `;
         grid.appendChild(card);
@@ -769,7 +772,10 @@ function renderForecastOM(data) {
                 <span class="fc-min-alt">${cToF(d.temperature_2m_min[i])}°<span class="fc-temp-unit">F</span></span>
             </div>
             <div class="fc-desc">${info.desc}</div>
-            ${d.wind_speed_10m_max ? `<div class="fc-wind">💨 ${Math.round(d.wind_speed_10m_max[i])} km/h</div>` : ''}
+            <div class="fc-bottom">
+                <span>🌧 ${d.precipitation_probability_max ? Math.round(d.precipitation_probability_max[i]) : 0}%</span>
+                ${d.wind_speed_10m_max ? `<span>💨 ${Math.round(d.wind_speed_10m_max[i])} km/h</span>` : ''}
+            </div>
         `;
         grid.appendChild(card);
     }
@@ -789,17 +795,18 @@ function initRadar() {
 let coahuilaMap, texasMap;
 
 function createCityMarkerHTML(name, temp, iconName, hi, lo) {
-    const iconSize = rs(52);
+    const iconSize = rs(44);
     return `
         <div class="city-marker">
             <div class="cm-name">${name}</div>
             <div class="cm-content">
                 <img src="${iconUrl(iconName)}" width="${iconSize}" height="${iconSize}" alt="" class="cm-icon-img">
-                <div class="cm-data">
-                    <span class="cm-temp">${temp}°</span>
-                    <span class="cm-lo">${lo}°</span>
+                <div class="cm-hilo">
+                    <span class="cm-hi">▲${hi}°</span>
+                    <span class="cm-lo">▼${lo}°</span>
                 </div>
             </div>
+            <div class="cm-actual-bar">${temp}°</div>
         </div>
     `;
 }
