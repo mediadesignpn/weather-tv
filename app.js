@@ -32,7 +32,7 @@ const COAHUILA_CITIES = [
 
 const TEXAS_CITIES = [
     { name: 'Laredo',       lat: 27.3500, lon: -99.5076 },
-    { name: 'Uvalde',       lat: 29.4500, lon: -100.2000 },
+    { name: 'Uvalde',       lat: 29.4500, lon: -100.5500 },
     { name: 'San Antonio',  lat: 29.4241, lon: -98.4936 },
     { name: 'Carrizo Springs', lat: 28.5217, lon: -99.8607 },
 ];
@@ -791,8 +791,8 @@ function renderForecast(forecast, dailyWind, dailyPrecip) {
             </div>` : ''}
             <div class="fc-desc">${descEs}</div>
             <div class="fc-bottom">
-                <span>🌧 ${precipProb != null ? Math.round(precipProb) : 0}%</span>
-                ${windKmh != null ? `<span>💨 ${windKmh} km/h</span>` : ''}
+                <span><svg class="fc-inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6l-2 2"/><path d="M12 22a7 7 0 0 0 7-7c0-3-2-6-7-11C7 9 5 12 5 15a7 7 0 0 0 7 7z"/></svg> ${precipProb != null ? Math.round(precipProb) : 0}%</span>
+                ${windKmh != null ? `<span><svg class="fc-inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2"/><path d="M12.59 19.41A2 2 0 1 0 14 16H2"/><path d="M17.73 7.73A2.5 2.5 0 1 1 19.5 12H2"/></svg> ${windKmh} km/h</span>` : ''}
             </div>
         `;
         grid.appendChild(card);
@@ -825,8 +825,8 @@ function renderForecastOM(data) {
             </div>
             <div class="fc-desc">${info.desc}</div>
             <div class="fc-bottom">
-                <span>🌧 ${d.precipitation_probability_max ? Math.round(d.precipitation_probability_max[i]) : 0}%</span>
-                ${d.wind_speed_10m_max ? `<span>💨 ${Math.round(d.wind_speed_10m_max[i])} km/h</span>` : ''}
+                <span><svg class="fc-inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6l-2 2"/><path d="M12 22a7 7 0 0 0 7-7c0-3-2-6-7-11C7 9 5 12 5 15a7 7 0 0 0 7 7z"/></svg> ${d.precipitation_probability_max ? Math.round(d.precipitation_probability_max[i]) : 0}%</span>
+                ${d.wind_speed_10m_max ? `<span><svg class="fc-inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2"/><path d="M12.59 19.41A2 2 0 1 0 14 16H2"/><path d="M17.73 7.73A2.5 2.5 0 1 1 19.5 12H2"/></svg> ${Math.round(d.wind_speed_10m_max[i])} km/h</span>` : ''}
             </div>
         `;
         grid.appendChild(card);
@@ -847,7 +847,7 @@ function initRadar() {
 let coahuilaMap, texasMap;
 
 function createCityMarkerHTML(name, temp, iconName, hi, lo) {
-    const iconSize = rs(44);
+    const iconSize = rs(60);
     return `
         <div class="city-marker">
             <div class="cm-name">${name}</div>
@@ -864,8 +864,8 @@ function createCityMarkerHTML(name, temp, iconName, hi, lo) {
 }
 
 function addMarkerToMap(map, lat, lon, html) {
-    const w = rs(240);
-    const h = rs(140);
+    const w = rs(320);
+    const h = rs(200);
     return L.marker([lat, lon], {
         icon: L.divIcon({
             className: 'city-marker-wrapper',
