@@ -65,15 +65,30 @@
                         </div>
                     </div>
                 </div>
-                <!-- DETALLES card -->
-                <div class="white-card white-card-details">
-                    <div class="card-header-red">DETALLES</div>
-                    <div class="card-body card-body-details">
-                        <div class="det-row"><span class="det-label">SENSACIÓN</span><span class="det-val" id="d-feels">--°</span></div>
-                        <div class="det-row"><span class="det-label">HUMEDAD</span><span class="det-val" id="d-humidity">--%</span></div>
-                        <div class="det-row"><span class="det-label">RÁFAGAS</span><span class="det-val" id="d-gusts">-- km/h</span></div>
-                        <div class="det-row"><span class="det-label">PUNTO ROCÍO</span><span class="det-val" id="d-dewpoint">--°</span></div>
-                        <div class="det-row"><span class="det-label">PRESIÓN</span><span class="det-val" id="d-pressure">-- hPa</span></div>
+                <!-- DETALLES + SOL column -->
+                <div class="details-col">
+                    <div class="white-card white-card-details">
+                        <div class="card-header-red">DETALLES</div>
+                        <div class="card-body card-body-details">
+                            <div class="det-row"><span class="det-label">SENSACIÓN</span><span class="det-val" id="d-feels">--°</span></div>
+                            <div class="det-row"><span class="det-label">HUMEDAD</span><span class="det-val" id="d-humidity">--%</span></div>
+                            <div class="det-row"><span class="det-label">RÁFAGAS</span><span class="det-val" id="d-gusts">-- km/h</span></div>
+                            <div class="det-row"><span class="det-label">PUNTO ROCÍO</span><span class="det-val" id="d-dewpoint">--°</span></div>
+                            <div class="det-row"><span class="det-label">PRESIÓN</span><span class="det-val" id="d-pressure">-- hPa</span></div>
+                        </div>
+                    </div>
+                    <div class="sun-card">
+                        <div class="sun-item">
+                            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="#ffaa00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/><path d="M3 17h4l1.5-3 3 6 3-6 1.5 3h4" stroke-width="1.5"/></svg>
+                            <span class="sun-label">AMANECER</span>
+                            <span class="sun-time" id="d-sunrise">--:--</span>
+                        </div>
+                        <div class="sun-divider"></div>
+                        <div class="sun-item">
+                            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="4"/><path d="M12 2v2M4.93 4.93l1.41 1.41M2 12h2M20 12h2M19.07 4.93l-1.41 1.41"/><path d="M3 18h18M5 14h14" opacity="0.5"/><path d="M8 22l4-4 4 4" stroke-width="1.5"/></svg>
+                            <span class="sun-label">ATARDECER</span>
+                            <span class="sun-time" id="d-sunset">--:--</span>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -454,6 +454,70 @@ body {
 .temp-label-max { color: #ffaa00; text-shadow: 0 1px 8px rgba(255,170,0,0.5); }
 .temp-label-min { color: #00e5ff; text-shadow: 0 1px 8px rgba(0,229,255,0.5); }
 
+/* ===== DETAILS COLUMN (detalles + sun) ===== */
+.details-col {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(8px, 0.8vw, 16px);
+    flex: 1;
+    max-width: clamp(250px, 24vw, 460px);
+}
+
+.details-col .white-card-details {
+    max-width: none;
+}
+
+/* ===== SUN CARD (sunrise/sunset) ===== */
+.sun-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(12px, 1.5vw, 30px);
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(8px) saturate(130%);
+    -webkit-backdrop-filter: blur(8px) saturate(130%);
+    border-radius: 12px;
+    padding: clamp(8px, 0.8vw, 16px) clamp(14px, 1.4vw, 28px);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+}
+
+.sun-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(2px, 0.2vw, 4px);
+}
+
+.sun-icon {
+    width: clamp(28px, 2.8vw, 56px);
+    height: clamp(28px, 2.8vw, 56px);
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+}
+
+.sun-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(14px, 1.4vw, 28px);
+    font-weight: 800;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: clamp(2px, 0.3vw, 6px);
+    text-transform: uppercase;
+}
+
+.sun-time {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(22px, 2.2vw, 44px);
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.sun-divider {
+    width: 2px;
+    height: clamp(40px, 4vw, 80px);
+    background: rgba(255,255,255,0.2);
+}
+
 /* ===== PANEL: FORECAST (5 white columns) ===== */
 
 
@@ -1177,6 +1241,14 @@ body {
     .det-row { padding: 16px 0; gap: 28px; }
     .card-body-details { padding: 28px 36px !important; }
 
+    /* Details column + Sun card */
+    .details-col { max-width: 580px; }
+    .sun-card { padding: 14px 20px; gap: 24px; }
+    .sun-icon { width: 46px; height: 46px; }
+    .sun-label { font-size: 24px; }
+    .sun-time { font-size: 40px; }
+    .sun-divider { height: 60px; }
+
     /* Forecast panel - joined cards, big data */
     .forecast-grid { gap: 0; padding: 16px 160px; }
     .fc-day { font-size: 30px; letter-spacing: 5px; padding: 12px 0; }
@@ -1229,6 +1301,13 @@ body {
     .det-label { font-size: 24px; }
     .det-val { font-size: 32px; }
     .det-row { padding: 18px 0; }
+
+    .details-col { max-width: 620px; }
+    .sun-card { padding: 16px 24px; gap: 30px; }
+    .sun-icon { width: 54px; height: 54px; }
+    .sun-label { font-size: 28px; }
+    .sun-time { font-size: 48px; }
+    .sun-divider { height: 70px; }
 
     .forecast-grid { padding: 20px 200px; }
     .fc-day { font-size: 36px; }

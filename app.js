@@ -185,6 +185,29 @@ function getWeatherBackground(summary) {
     return 'backgrounds/clear-day.webm';
 }
 
+// Show sunrise only from 00:00 until sunrise, sunset only from 00:00 until sunset
+function updateSunVisibility() {
+    const now = new Date();
+    const sunriseItem = document.querySelector('.sun-item:first-child');
+    const sunsetItem = document.querySelector('.sun-item:last-child');
+    const divider = document.querySelector('.sun-divider');
+    if (!sunriseItem) return;
+
+    const showSunrise = window._sunriseTime && now < window._sunriseTime;
+    const showSunset = window._sunsetTime && now < window._sunsetTime;
+
+    sunriseItem.style.display = showSunrise ? '' : 'none';
+    sunsetItem.style.display = showSunset ? '' : 'none';
+    divider.style.display = (showSunrise && showSunset) ? '' : 'none';
+
+    // Hide entire sun card if both are hidden
+    const sunCard = document.querySelector('.sun-card');
+    if (sunCard) sunCard.style.display = (!showSunrise && !showSunset) ? 'none' : '';
+}
+
+// Check sun visibility every minute
+setInterval(updateSunVisibility, 60000);
+
 function setCurrentBackground(summary) {
     const bg = document.getElementById('current-bg');
     const video = document.getElementById('bg-video');
@@ -457,7 +480,7 @@ async function fetchMainWeather() {
         // Fetch NWS and Open-Meteo wind data in parallel
         const [xml, omData] = await Promise.all([
             fetchNwsDwml(lat, lon),
-            fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=wind_speed_10m_max,precipitation_probability_max&timezone=America%2FChicago&forecast_days=7`)
+            fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=wind_speed_10m_max,precipitation_probability_max,sunrise,sunset&timezone=America%2FChicago&forecast_days=7`)
                 .then(r => r.json()).catch(() => null)
         ]);
         const current = parseNwsCurrent(xml);
@@ -465,7 +488,10 @@ async function fetchMainWeather() {
         const dailyWind = omData && omData.daily ? omData.daily.wind_speed_10m_max : null;
         const dailyPrecip = omData && omData.daily ? omData.daily.precipitation_probability_max : null;
 
-        if (current) renderCurrentWeather(current, forecast);
+        const sunrise = omData && omData.daily ? omData.daily.sunrise[0] : null;
+        const sunset = omData && omData.daily ? omData.daily.sunset[0] : null;
+
+        if (current) renderCurrentWeather(current, forecast, sunrise, sunset);
         if (forecast) renderForecast(forecast, dailyWind, dailyPrecip);
     } catch (err) {
         console.error('NWS main weather error:', err);
@@ -481,7 +507,7 @@ async function fetchMainWeatherFallback() {
             `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
             `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,` +
             `wind_speed_10m,wind_gusts_10m,surface_pressure,uv_index` +
-            `&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,wind_speed_10m_max` +
+            `&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,wind_speed_10m_max,sunrise,sunset` +
             `&timezone=America%2FChicago&forecast_days=6`
         );
         const data = await res.json();
@@ -492,7 +518,7 @@ async function fetchMainWeatherFallback() {
     }
 }
 
-function renderCurrentWeather(current, forecast) {
+function renderCurrentWeather(current, forecast, sunrise, sunset) {
     const hour = new Date().getHours();
     const isEvening = hour >= 18; // 6pm - 11:59pm
 
@@ -584,6 +610,19 @@ function renderCurrentWeather(current, forecast) {
     document.getElementById('d-dewpoint').textContent = current.dewPoint != null ? `${fToC(current.dewPoint)}°` : '--°';
     document.getElementById('d-pressure').textContent = current.pressure != null ? `${Math.round(current.pressure * 33.8639)} hPa` : '-- hPa';
 
+    // Sunrise / Sunset
+    if (sunrise) {
+        const sr = new Date(sunrise);
+        document.getElementById('d-sunrise').textContent = sr.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+        window._sunriseTime = sr;
+    }
+    if (sunset) {
+        const ss = new Date(sunset);
+        document.getElementById('d-sunset').textContent = ss.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+        window._sunsetTime = ss;
+    }
+    updateSunVisibility();
+
     // Set background
     setCurrentBackground(current.summary);
 }
@@ -628,6 +667,19 @@ function renderCurrentWeatherOM(data) {
     document.getElementById('d-pressure').textContent = `${Math.round(c.surface_pressure)} hPa`;
     const uvEl = document.getElementById('d-uv');
     if (uvEl) uvEl.textContent = `${Math.round(c.uv_index)}`;
+
+    // Sunrise / Sunset
+    if (d.sunrise && d.sunrise[0]) {
+        const sr = new Date(d.sunrise[0]);
+        document.getElementById('d-sunrise').textContent = sr.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+        window._sunriseTime = sr;
+    }
+    if (d.sunset && d.sunset[0]) {
+        const ss = new Date(d.sunset[0]);
+        document.getElementById('d-sunset').textContent = ss.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+        window._sunsetTime = ss;
+    }
+    updateSunVisibility();
 
     setCurrentBackground(info.desc);
 }
