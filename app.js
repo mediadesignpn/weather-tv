@@ -148,7 +148,7 @@ function getWeatherBackground(summary) {
     if (!summary) return 'backgrounds/default.webm';
     const s = summary.toLowerCase();
     const hour = new Date().getHours();
-    const isNight = hour < 6 || hour >= 20;
+    const isNight = hour < 5 || hour >= 20;
 
     if (s.includes('tornado')) {
         return 'backgrounds/Tornado.webm';
