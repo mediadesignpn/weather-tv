@@ -477,26 +477,31 @@ function parseNwsCityData(xml) {
 async function fetchMainWeather() {
     try {
         const { lat, lon } = MAIN_CITY;
-        // Fetch NWS and Open-Meteo wind data in parallel
+        // Fetch NWS and Open-Meteo data in parallel
         const [xml, omData] = await Promise.all([
-            fetchNwsDwml(lat, lon),
+            fetchNwsDwml(lat, lon).catch(() => null),
             fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=wind_speed_10m_max,precipitation_probability_max,sunrise,sunset&timezone=America%2FChicago&forecast_days=7`)
                 .then(r => r.json()).catch(() => null)
         ]);
-        const current = parseNwsCurrent(xml);
-        const forecast = parseNwsForecast(xml);
+        const current = xml ? parseNwsCurrent(xml) : null;
+        const forecast = xml ? parseNwsForecast(xml) : null;
         const dailyWind = omData && omData.daily ? omData.daily.wind_speed_10m_max : null;
         const dailyPrecip = omData && omData.daily ? omData.daily.precipitation_probability_max : null;
-
         const sunrise = omData && omData.daily ? omData.daily.sunrise[0] : null;
         const sunset = omData && omData.daily ? omData.daily.sunset[0] : null;
 
-        if (current) renderCurrentWeather(current, forecast, sunrise, sunset);
-        if (forecast) renderForecast(forecast, dailyWind, dailyPrecip);
+        // If NWS returned valid data, use it
+        if (current && forecast && forecast.periods.length > 0) {
+            renderCurrentWeather(current, forecast, sunrise, sunset);
+            renderForecast(forecast, dailyWind, dailyPrecip);
+        } else {
+            // NWS data incomplete — fallback to Open-Meteo
+            console.warn('NWS data incomplete, falling back to Open-Meteo');
+            await fetchMainWeatherFallback();
+        }
     } catch (err) {
         console.error('NWS main weather error:', err);
-        // Fallback to Open-Meteo
-        fetchMainWeatherFallback();
+        await fetchMainWeatherFallback();
     }
 }
 
@@ -511,8 +516,12 @@ async function fetchMainWeatherFallback() {
             `&timezone=America%2FChicago&forecast_days=6`
         );
         const data = await res.json();
-        renderCurrentWeatherOM(data);
-        renderForecastOM(data);
+        if (data && data.current) {
+            renderCurrentWeatherOM(data);
+        }
+        if (data && data.daily) {
+            renderForecastOM(data);
+        }
     } catch (e) {
         console.error('Fallback also failed:', e);
     }
@@ -933,25 +942,55 @@ async function initTexasMap() {
         maxZoom: 18,
     }).addTo(texasMap);
 
-    // Fetch NWS data for each Texas city
-    const promises = TEXAS_CITIES.map(async (city) => {
+    // Fetch NWS data for each Texas city, fallback to Open-Meteo if NWS fails
+    const nwsResults = await Promise.all(TEXAS_CITIES.map(async (city) => {
         try {
             const xml = await fetchNwsDwml(city.lat, city.lon);
-            return parseNwsCityData(xml);
+            const data = parseNwsCityData(xml);
+            if (data && data.temp != null && data.hi != null) return data;
+            return null;
         } catch (e) {
-            console.error(`NWS error for ${city.name}:`, e);
             return null;
         }
-    });
+    }));
 
-    const results = await Promise.all(promises);
+    // Check if any city needs Open-Meteo fallback
+    const needsFallback = nwsResults.some(r => r === null);
+    let omResults = null;
+    if (needsFallback) {
+        try {
+            const lats = TEXAS_CITIES.map(c => c.lat).join(',');
+            const lons = TEXAS_CITIES.map(c => c.lon).join(',');
+            const res = await fetch(
+                `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}` +
+                `&current=temperature_2m,weather_code` +
+                `&daily=temperature_2m_max,temperature_2m_min` +
+                `&timezone=America%2FChicago&forecast_days=1`
+            );
+            const data = await res.json();
+            omResults = Array.isArray(data) ? data : [data];
+        } catch (e) {
+            console.error('Open-Meteo fallback for Texas failed:', e);
+        }
+    }
 
     TEXAS_CITIES.forEach((city, i) => {
-        const r = results[i];
-        const temp = r && r.temp != null ? Math.round(r.temp) : '--';
-        const icon = r ? r.icon : 'thermometer';
-        const hi = r && r.hi != null ? Math.round(r.hi) : '--';
-        const lo = r && r.lo != null ? Math.round(r.lo) : '--';
+        let temp, icon, hi, lo;
+        const r = nwsResults[i];
+        if (r) {
+            temp = Math.round(r.temp);
+            icon = r.icon;
+            hi = Math.round(r.hi);
+            lo = Math.round(r.lo);
+        } else if (omResults && omResults[i]) {
+            const om = omResults[i];
+            temp = om.current ? Math.round(om.current.temperature_2m) : '--';
+            icon = om.current ? getWeatherInfo(om.current.weather_code).icon : 'thermometer';
+            hi = om.daily ? Math.round(om.daily.temperature_2m_max[0]) : '--';
+            lo = om.daily ? Math.round(om.daily.temperature_2m_min[0]) : '--';
+        } else {
+            temp = '--'; icon = 'thermometer'; hi = '--'; lo = '--';
+        }
         addMarkerToMap(texasMap, city.lat, city.lon, createCityMarkerHTML(city.name, temp, icon, hi, lo));
     });
 
