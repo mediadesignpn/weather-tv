@@ -31,7 +31,7 @@ const COAHUILA_CITIES = [
 ];
 
 const TEXAS_CITIES = [
-    { name: 'Laredo',       lat: 27.5036, lon: -99.5076 },
+    { name: 'Laredo',       lat: 27.3500, lon: -99.5076 },
     { name: 'Uvalde',       lat: 29.4500, lon: -100.2000 },
     { name: 'San Antonio',  lat: 29.4241, lon: -98.4936 },
     { name: 'Carrizo Springs', lat: 28.5217, lon: -99.8607 },
