@@ -403,7 +403,7 @@ body {
     font-family: 'Montserrat', sans-serif;
     font-size: clamp(9px, 0.7vw, 14px);
     font-weight: 800;
-    color: rgba(255,255,255,0.6);
+    color: #fff;
     white-space: nowrap;
     letter-spacing: clamp(0.5px, 0.06vw, 1px);
 }
@@ -499,7 +499,7 @@ body {
     font-family: 'Montserrat', sans-serif;
     font-size: clamp(14px, 1.4vw, 28px);
     font-weight: 800;
-    color: rgba(255,255,255,0.6);
+    color: #fff;
     letter-spacing: clamp(2px, 0.3vw, 6px);
     text-transform: uppercase;
 }
