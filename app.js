@@ -1479,7 +1479,7 @@ async function init() {
 
     // Refresh intervals
     setInterval(fetchMainWeather, 600000);   // 10 min
-    setInterval(fetchNWSAlerts, 300000);      // 5 min
+    setInterval(fetchNWSAlerts, 120000);      // 2 min
 
     // Handle window resize - update map zoom levels
     let resizeTimeout;
