@@ -1458,10 +1458,24 @@ async function init() {
     try { initTexasMap(); } catch (e) { console.error('Texas map init error:', e); }
     try { initAlertsMap(); } catch (e) { console.error('Alerts map init error:', e); }
 
-    await Promise.all([
-        fetchMainWeather(),
-        fetchNWSAlerts(),
-    ]);
+    // Fetch weather and alerts — retry alerts if they fail
+    let alertsOk = false;
+    try {
+        await Promise.all([
+            fetchMainWeather(),
+            fetchNWSAlerts().then(() => { alertsOk = true; }),
+        ]);
+    } catch (e) {
+        console.error('Init fetch error:', e);
+    }
+
+    // Retry alerts once if first attempt failed
+    if (!alertsOk) {
+        try { await fetchNWSAlerts(); } catch (e) { console.error('Alerts retry failed:', e); }
+    }
+
+    // Ensure forecast cards get alert badges after both data sources are ready
+    updateForecastCardAlerts();
 
     // Refresh intervals
     setInterval(fetchMainWeather, 600000);   // 10 min
