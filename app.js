@@ -178,11 +178,15 @@ function getWeatherBackground(summary) {
     if (s.includes('hot')) {
         return 'backgrounds/hot.webm';
     }
-    // Clear / Sunny / Fair
-    if (isNight) {
-        return 'backgrounds/clear-night.webm';
-    }
-    return 'backgrounds/clear-day.webm';
+    // Clear / Sunny / Fair — sequential variant per refresh
+    const clearDay = ['backgrounds/clear-day.webm', 'backgrounds/clear-day-2.webm', 'backgrounds/clear-day-3.webm', 'backgrounds/clear-day-4.webm'];
+    const clearNight = ['backgrounds/clear-night.webm', 'backgrounds/clear-night-2.webm', 'backgrounds/clear-night-3.webm', 'backgrounds/clear-night-4.webm'];
+    const key = isNight ? 'clearNightIdx' : 'clearDayIdx';
+    const arr = isNight ? clearNight : clearDay;
+    let idx = parseInt(localStorage.getItem(key) || '0', 10);
+    if (idx >= arr.length) idx = 0;
+    localStorage.setItem(key, (idx + 1) % arr.length);
+    return arr[idx];
 }
 
 // Show sunrise only from 00:00 until sunrise, sunset only from 00:00 until sunset
@@ -529,8 +533,8 @@ async function fetchMainWeatherFallback() {
 }
 
 function renderCurrentWeather(current, forecast, sunrise, sunset) {
-    const hour = new Date().getHours();
-    const isEvening = hour >= 18; // 6pm - 11:59pm
+    const now = new Date();
+    const isEvening = now.getHours() > 17 || (now.getHours() === 17 && now.getMinutes() >= 45); // 5:45pm
 
     const cardDay = document.getElementById('card-day');
     const cardNight = document.getElementById('card-night');
@@ -642,8 +646,8 @@ function renderCurrentWeatherOM(data) {
     const c = data.current;
     const d = data.daily;
     const info = getWeatherInfo(c.weather_code);
-    const hour = new Date().getHours();
-    const isEvening = hour >= 18;
+    const nowOM = new Date();
+    const isEvening = nowOM.getHours() > 17 || (nowOM.getHours() === 17 && nowOM.getMinutes() >= 45); // 5:45pm
 
     const cardDay = document.getElementById('card-day');
     const cardNight = document.getElementById('card-night');
@@ -1458,28 +1462,25 @@ async function init() {
     try { initTexasMap(); } catch (e) { console.error('Texas map init error:', e); }
     try { initAlertsMap(); } catch (e) { console.error('Alerts map init error:', e); }
 
-    // Fetch weather and alerts — retry alerts if they fail
-    let alertsOk = false;
+    // Fetch alerts immediately — don't wait for weather
+    fetchNWSAlerts().catch(e => {
+        console.error('Alerts first attempt failed, retrying:', e);
+        fetchNWSAlerts().catch(e2 => console.error('Alerts retry failed:', e2));
+    });
+
+    // Fetch weather data
     try {
-        await Promise.all([
-            fetchMainWeather(),
-            fetchNWSAlerts().then(() => { alertsOk = true; }),
-        ]);
+        await fetchMainWeather();
     } catch (e) {
-        console.error('Init fetch error:', e);
+        console.error('Weather fetch error:', e);
     }
 
-    // Retry alerts once if first attempt failed
-    if (!alertsOk) {
-        try { await fetchNWSAlerts(); } catch (e) { console.error('Alerts retry failed:', e); }
-    }
-
-    // Ensure forecast cards get alert badges after both data sources are ready
+    // Ensure forecast cards get alert badges after weather data is ready
     updateForecastCardAlerts();
 
     // Refresh intervals
     setInterval(fetchMainWeather, 600000);   // 10 min
-    setInterval(fetchNWSAlerts, 120000);      // 2 min
+    setInterval(fetchNWSAlerts, 60000);       // 1 min
 
     // Handle window resize - update map zoom levels
     let resizeTimeout;
