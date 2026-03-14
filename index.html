@@ -7,8 +7,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Bebas+Neue&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css" id="styles-link">
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-pI1icGO1xGs9XzeIT_7DTF8-zhqKPQ4"></script>
+    <script>
+        // Cache buster — forces browser to load latest CSS and JS
+        var v = Date.now();
+        document.getElementById('styles-link').href = 'styles.css?v=' + v;
+    </script>
 </head>
 <body>
     <!-- Full-screen background -->
@@ -204,7 +209,7 @@
 
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js"></script>
+    <script>document.write('<script src="app.js?v=' + Date.now() + '"><\/script>');</script>
     <script>
     // Update banner label + retrigger card animations on nav
     document.querySelectorAll('.nav-btn').forEach(btn => {
