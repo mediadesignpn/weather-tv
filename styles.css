@@ -330,7 +330,9 @@ body {
     text-transform: uppercase;
 }
 
-.alerts-strip-expires {
+.alerts-strip-times {
+    display: flex;
+    gap: clamp(8px, 0.8vw, 16px);
     font-family: 'Montserrat', sans-serif;
     font-size: clamp(11px, 1vw, 22px);
     font-weight: 800;

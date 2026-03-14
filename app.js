@@ -1134,21 +1134,46 @@ function updatePanelAlertsStrip(alerts) {
         return;
     }
 
-    const items = alerts.map(a => {
+    // Filter only alerts that apply to today
+    const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+    const todayAlerts = alerts.filter(a => {
+        const p = a.properties;
+        const onset = p.onset ? new Date(p.onset) : (p.effective ? new Date(p.effective) : null);
+        const end = p.ends ? new Date(p.ends) : (p.expires ? new Date(p.expires) : null);
+        if (!onset || !end) return true; // show if no dates available
+        const dayStart = new Date(todayStr + 'T00:00:00');
+        const dayEnd = new Date(todayStr + 'T23:59:59');
+        return onset <= dayEnd && end >= dayStart;
+    });
+
+    if (todayAlerts.length === 0) {
+        strip.classList.remove('has-alerts');
+        strip.innerHTML = '';
+        return;
+    }
+
+    const formatDateTime = (dateStr) => {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        return `${d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} ${d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`;
+    };
+
+    const items = todayAlerts.map(a => {
         const p = a.properties;
         const icon = getEventTypeIcon(p.event);
         const translated = translateEvent(p.event);
         const style = getSeverityStyle(p.severity);
-        const ends = p.ends || p.expires;
-        let expiresStr = '';
-        if (ends) {
-            const d = new Date(ends);
-            expiresStr = `${d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} ${d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`;
-        }
+        const onset = p.onset || p.effective || '';
+        const ends = p.ends || p.expires || '';
+        const onsetStr = formatDateTime(onset);
+        const endsStr = formatDateTime(ends);
         return `<div class="alerts-strip-item" data-severity="${p.severity || 'Unknown'}">
             <span class="alerts-strip-icon">${icon}</span>
             <span class="alerts-strip-text">${translated}</span>
-            ${expiresStr ? `<span class="alerts-strip-expires">Expira: ${expiresStr}</span>` : ''}
+            <span class="alerts-strip-times">
+                ${onsetStr ? `<span>Inicio: ${onsetStr}</span>` : ''}
+                ${endsStr ? `<span>Finaliza: ${endsStr}</span>` : ''}
+            </span>
             <span class="alerts-strip-severity" style="background:${style.badge};">${style.label}</span>
         </div>`;
     }).join('');
