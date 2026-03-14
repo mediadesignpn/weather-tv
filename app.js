@@ -209,6 +209,7 @@ function updateSunVisibility() {
 setInterval(updateSunVisibility, 60000);
 
 function setCurrentBackground(summary) {
+    if (window.testBgLocked) return;
     const bg = document.getElementById('current-bg');
     const video = document.getElementById('bg-video');
     const url = getWeatherBackground(summary);
@@ -784,6 +785,7 @@ function renderForecast(forecast, dailyWind, dailyPrecip) {
 
         const card = document.createElement('div');
         card.className = 'forecast-card';
+        card.dataset.forecastDate = date.toLocaleDateString('en-CA'); // YYYY-MM-DD
         card.innerHTML = `
             <div class="fc-day">${dayName}</div>
             <div class="fc-date">${date.getDate()} ${MESES[date.getMonth()]}</div>
@@ -806,6 +808,8 @@ function renderForecast(forecast, dailyWind, dailyPrecip) {
         `;
         grid.appendChild(card);
     });
+    // Apply alert indicators to forecast cards
+    updateForecastCardAlerts();
 }
 
 // Open-Meteo fallback
@@ -818,6 +822,7 @@ function renderForecastOM(data) {
         const info = getWeatherInfo(d.weather_code[i]);
         const card = document.createElement('div');
         card.className = 'forecast-card';
+        card.dataset.forecastDate = d.time[i]; // YYYY-MM-DD
         card.innerHTML = `
             <div class="fc-day">${DIAS_CORTO[date.getDay()]}</div>
             <div class="fc-date">${date.getDate()} ${MESES[date.getMonth()]}</div>
@@ -840,6 +845,8 @@ function renderForecastOM(data) {
         `;
         grid.appendChild(card);
     }
+    // Apply alert indicators to forecast cards
+    updateForecastCardAlerts();
 }
 
 // ============================================================
@@ -1026,7 +1033,7 @@ const EVENT_TRANSLATIONS = {
     'Flood Advisory': 'ADVERTENCIA DE INUNDACIÓN',
     'Winter Storm Warning': 'AVISO DE TORMENTA INVERNAL',
     'Winter Storm Watch': 'VIGILANCIA DE TORMENTA INVERNAL',
-    'Winter Weather Advisory': 'ADVERTENCIA DE CLIMA INVERNAL',
+    'Winter Weather Advisory': 'ADVERTENCIA DE TIEMPO INVERNAL',
     'Ice Storm Warning': 'AVISO DE TORMENTA DE HIELO',
     'Freeze Warning': 'AVISO DE HELADA',
     'Freeze Watch': 'VIGILANCIA DE HELADA',
@@ -1039,9 +1046,9 @@ const EVENT_TRANSLATIONS = {
     'Excessive Heat Watch': 'VIGILANCIA DE CALOR EXCESIVO',
     'Dense Fog Advisory': 'ADVERTENCIA DE NEBLINA DENSA',
     'Special Weather Statement': 'BOLETÍN METEOROLÓGICO ESPECIAL',
-    'Hazardous Weather Outlook': 'PERSPECTIVA DE CLIMA PELIGROSO',
+    'Hazardous Weather Outlook': 'PERSPECTIVA DE TIEMPO PELIGROSO',
     'Red Flag Warning': 'AVISO DE BANDERA ROJA (INCENDIO)',
-    'Fire Weather Watch': 'VIGILANCIA DE CLIMA DE INCENDIO',
+    'Fire Weather Watch': 'VIGILANCIA DE TIEMPO DE INCENDIO',
     'Dust Storm Warning': 'AVISO DE TORMENTA DE POLVO',
     'Blowing Dust Advisory': 'ADVERTENCIA DE POLVO',
 };
@@ -1052,16 +1059,27 @@ function translateEvent(event) {
 
 function getEventTypeIcon(event) {
     const e = event.toLowerCase();
-    if (e.includes('tornado')) return '🌪️';
-    if (e.includes('thunderstorm')) return '⛈️';
-    if (e.includes('flood') || e.includes('flash')) return '🌊';
-    if (e.includes('winter') || e.includes('ice') || e.includes('freeze') || e.includes('frost')) return '❄️';
-    if (e.includes('wind')) return '💨';
-    if (e.includes('heat')) return '🔥';
-    if (e.includes('fog')) return '🌫️';
-    if (e.includes('fire') || e.includes('red flag')) return '🔥';
-    if (e.includes('dust')) return '🌪️';
-    return '⚠️';
+    const sz = 'width="1em" height="1em" style="vertical-align:middle;"';
+    if (e.includes('tornado'))
+        return `<svg ${sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H3"/><path d="M18 8H6"/><path d="M19 12H9"/><path d="M16 16h-6"/><path d="M11 20h2"/></svg>`;
+    if (e.includes('thunderstorm'))
+        return `<svg ${sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973"/><path d="M13 12l-3 5h4l-3 5"/></svg>`;
+    if (e.includes('flood') || e.includes('flash'))
+        return `<svg ${sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15c1.5-1.5 3.5-1.5 5 0s3.5 1.5 5 0 3.5-1.5 5 0 3.5 1.5 5 0"/><path d="M2 19c1.5-1.5 3.5-1.5 5 0s3.5 1.5 5 0 3.5-1.5 5 0 3.5 1.5 5 0"/><path d="M9 3v8"/><path d="M15 3v8"/><path d="M6 7h12"/></svg>`;
+    if (e.includes('winter') || e.includes('ice') || e.includes('freeze') || e.includes('frost'))
+        return `<svg ${sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M2 12h20"/><path d="m4.93 4.93 14.14 14.14"/><path d="m19.07 4.93-14.14 14.14"/><path d="m9 2 3 3 3-3"/><path d="m9 22 3-3 3 3"/><path d="m2 9 3 3-3 3"/><path d="m22 9-3 3 3 3"/></svg>`;
+    if (e.includes('wind'))
+        return `<svg ${sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2"/><path d="M12.59 19.41A2 2 0 1 0 14 16H2"/><path d="M17.73 7.73A2.5 2.5 0 1 1 19.5 12H2"/></svg>`;
+    if (e.includes('heat'))
+        return `<svg ${sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z"/></svg>`;
+    if (e.includes('fog'))
+        return `<svg ${sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18"/><path d="M5 14h14"/><path d="M7 18h10"/><path d="M6 6a4 4 0 0 1 8 0c0 2-2 3-4 3S6 8 6 6z"/></svg>`;
+    if (e.includes('fire') || e.includes('red flag'))
+        return `<svg ${sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`;
+    if (e.includes('dust'))
+        return `<svg ${sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H3"/><path d="M18 8H6"/><path d="M19 12H9"/><path d="M16 16h-6"/><path d="M11 20h2"/></svg>`;
+    // Default: warning triangle
+    return `<svg ${sz} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
 }
 
 function fetchWithTimeout(url, options, timeout = 8000) {
@@ -1069,6 +1087,156 @@ function fetchWithTimeout(url, options, timeout = 8000) {
         fetch(url, options),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeout))
     ]);
+}
+
+// Global alerts cache for use in forecast cards
+let cachedNWSAlerts = [];
+let alertsSliderInterval = null;
+let alertsSliderIndex = 0;
+
+function startAlertsSlider() {
+    const strip = document.getElementById('current-alerts-strip');
+    if (!strip) return;
+    const items = strip.querySelectorAll('.alerts-strip-item');
+    if (items.length <= 1) {
+        // Single alert: just show it, no slider needed
+        if (items.length === 1) items[0].classList.add('alerts-strip-active');
+        return;
+    }
+
+    alertsSliderIndex = 0;
+    items[0].classList.add('alerts-strip-active');
+
+    if (alertsSliderInterval) clearInterval(alertsSliderInterval);
+    alertsSliderInterval = setInterval(() => {
+        items[alertsSliderIndex].classList.remove('alerts-strip-active');
+        alertsSliderIndex = (alertsSliderIndex + 1) % items.length;
+        items[alertsSliderIndex].classList.add('alerts-strip-active');
+    }, 6000);
+}
+
+function updatePanelAlertsStrip(alerts) {
+    cachedNWSAlerts = alerts || [];
+
+    // Clear previous slider
+    if (alertsSliderInterval) {
+        clearInterval(alertsSliderInterval);
+        alertsSliderInterval = null;
+    }
+
+    // Update strip on Hoy panel
+    const strip = document.getElementById('current-alerts-strip');
+    if (!strip) return;
+
+    if (!alerts || alerts.length === 0) {
+        strip.classList.remove('has-alerts');
+        strip.innerHTML = '';
+        return;
+    }
+
+    const items = alerts.map(a => {
+        const p = a.properties;
+        const icon = getEventTypeIcon(p.event);
+        const translated = translateEvent(p.event);
+        const style = getSeverityStyle(p.severity);
+        const ends = p.ends || p.expires;
+        let expiresStr = '';
+        if (ends) {
+            const d = new Date(ends);
+            expiresStr = `${d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} ${d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`;
+        }
+        return `<div class="alerts-strip-item" data-severity="${p.severity || 'Unknown'}">
+            <span class="alerts-strip-icon">${icon}</span>
+            <span class="alerts-strip-text">${translated}</span>
+            ${expiresStr ? `<span class="alerts-strip-expires">Expira: ${expiresStr}</span>` : ''}
+            <span class="alerts-strip-severity" style="background:${style.badge};">${style.label}</span>
+        </div>`;
+    }).join('');
+
+    strip.innerHTML = items;
+    strip.classList.add('has-alerts');
+
+    // Start slider rotation
+    startAlertsSlider();
+
+    // Re-render forecast alerts if cards already exist
+    updateForecastCardAlerts();
+}
+
+// Check which alerts overlap a given date and return matching alerts
+function getAlertsForDate(dateStr) {
+    // dateStr = 'YYYY-MM-DD'
+    const dayStart = new Date(dateStr + 'T00:00:00');
+    const dayEnd = new Date(dateStr + 'T23:59:59');
+
+    return cachedNWSAlerts.filter(a => {
+        const p = a.properties;
+        const onset = p.onset ? new Date(p.onset) : (p.effective ? new Date(p.effective) : null);
+        const end = p.ends ? new Date(p.ends) : (p.expires ? new Date(p.expires) : null);
+        if (!onset || !end) return false;
+        // Alert overlaps this day if it starts before day ends AND ends after day starts
+        return onset <= dayEnd && end >= dayStart;
+    });
+}
+
+// Forecast card alert slider intervals
+let fcAlertSliderIntervals = [];
+
+// Add alert badges to existing forecast cards
+function updateForecastCardAlerts() {
+    // Clear previous sliders
+    fcAlertSliderIntervals.forEach(id => clearInterval(id));
+    fcAlertSliderIntervals = [];
+
+    const cards = document.querySelectorAll('.forecast-card');
+    cards.forEach(card => {
+        // Remove any existing alert indicator
+        const existing = card.querySelector('.fc-alert-indicator');
+        if (existing) existing.remove();
+
+        const dateAttr = card.dataset.forecastDate;
+        if (!dateAttr) return;
+
+        const dayAlerts = getAlertsForDate(dateAttr);
+        if (dayAlerts.length === 0) return;
+
+        // Build alert indicator
+        const indicator = document.createElement('div');
+        indicator.className = 'fc-alert-indicator';
+        indicator.innerHTML = dayAlerts.map(a => {
+            const p = a.properties;
+            const icon = getEventTypeIcon(p.event);
+            const translated = translateEvent(p.event);
+            const style = getSeverityStyle(p.severity);
+            return `<div class="fc-alert-badge" style="background:${style.badge};">
+                <span class="fc-alert-badge-icon">${icon}</span>
+                <span class="fc-alert-badge-text">${translated}</span>
+            </div>`;
+        }).join('');
+
+        // Insert after the date
+        const fcDate = card.querySelector('.fc-date');
+        if (fcDate && fcDate.nextSibling) {
+            fcDate.parentNode.insertBefore(indicator, fcDate.nextSibling);
+        } else {
+            card.prepend(indicator);
+        }
+
+        // Activate first badge and start slider if multiple
+        const badges = indicator.querySelectorAll('.fc-alert-badge');
+        if (badges.length === 1) {
+            badges[0].classList.add('fc-alert-active');
+        } else if (badges.length > 1) {
+            let idx = 0;
+            badges[0].classList.add('fc-alert-active');
+            const intervalId = setInterval(() => {
+                badges[idx].classList.remove('fc-alert-active');
+                idx = (idx + 1) % badges.length;
+                badges[idx].classList.add('fc-alert-active');
+            }, 5000);
+            fcAlertSliderIntervals.push(intervalId);
+        }
+    });
 }
 
 async function fetchNWSAlerts() {
@@ -1109,10 +1277,13 @@ async function fetchNWSAlerts() {
         }
         alertsCount.textContent = `${alerts.length} alerta${alerts.length !== 1 ? 's' : ''} activa${alerts.length !== 1 ? 's' : ''}`;
 
+        // Update alerts strip on Hoy and 5 Días panels
+        updatePanelAlertsStrip(alerts);
+
         if (alerts.length === 0) {
             alertsList.innerHTML = `
                 <div class="no-alerts">
-                    <div class="no-alerts-icon">✅</div>
+                    <div class="no-alerts-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#44aa44" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
                     <div class="no-alerts-text">NO HAY ALERTAS ACTIVAS</div>
                     <div class="no-alerts-sub">Maverick County, TX — Sin advertencias ni avisos vigentes</div>
                 </div>`;
@@ -1152,10 +1323,11 @@ async function fetchNWSAlerts() {
         console.error('NWS alerts error:', err);
         alertsList.innerHTML = `
             <div class="no-alerts">
-                <div class="no-alerts-icon">⚠️</div>
+                <div class="no-alerts-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ffa500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
                 <div class="no-alerts-text">ERROR AL CARGAR ALERTAS</div>
                 <div class="no-alerts-sub">No se pudo conectar con el NWS</div>
             </div>`;
+        updatePanelAlertsStrip([]);
     }
 }
 
@@ -1246,6 +1418,7 @@ function updateAutoCycleBtn() {
     }
 }
 
+
 // ============================================================
 // INIT
 // ============================================================
@@ -1289,5 +1462,28 @@ function toggleFullscreen() {
         document.exitFullscreen().catch(() => {});
     }
 }
+
+// ============================================================
+// SIDEBAR WATCHDOG — ensure both sidebars stay visible
+// Unless the user explicitly hid them via the toggle button
+// ============================================================
+(function sidebarWatchdog() {
+    const hideBtn = document.getElementById('hide-nav-btn');
+    setInterval(() => {
+        // If the toggle button is active, user intentionally hid them — don't interfere
+        if (hideBtn && hideBtn.classList.contains('active')) return;
+        const navs = document.querySelectorAll('.side-nav');
+        navs.forEach(nav => {
+            // Remove nav-hidden if it was set unexpectedly
+            if (nav.classList.contains('nav-hidden')) {
+                nav.classList.remove('nav-hidden');
+            }
+            // Ensure sidebar is not hidden via inline styles
+            nav.style.display = '';
+            nav.style.visibility = '';
+            nav.style.opacity = '';
+        });
+    }, 5000);
+})();
 
 init();

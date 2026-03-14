@@ -40,6 +40,7 @@
         <!-- PANEL: Current -->
         <div class="panel" id="panel-current">
             <div class="current-location-bar">PIEDRAS NEGRAS / EAGLE PASS</div>
+            <div class="panel-alerts-strip" id="current-alerts-strip"></div>
             <div class="current-layout">
                 <!-- DÍA card -->
                 <div class="white-card" id="card-day">
@@ -144,7 +145,7 @@
                     </div>
                     <div class="alerts-list" id="alerts-list">
                         <div class="no-alerts">
-                            <div class="no-alerts-icon">⏳</div>
+                            <div class="no-alerts-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
                             <div class="no-alerts-text">CARGANDO ALERTAS...</div>
                         </div>
                     </div>
@@ -262,6 +263,7 @@
         { name: 'Default', file: 'backgrounds/default.webm' },
     ];
     let testBgIndex = -1;
+    window.testBgLocked = false;
     function testNextBg() {
         testBgIndex = (testBgIndex + 1) % TEST_BGS.length;
         const item = TEST_BGS[testBgIndex];
@@ -270,6 +272,7 @@
         video.play().catch(() => {});
         video.classList.add('visible');
         document.getElementById('test-bg-label').textContent = item.name;
+        window.testBgLocked = true;
     }
     </script>
 </body>

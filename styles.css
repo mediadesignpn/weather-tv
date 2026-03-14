@@ -278,6 +278,94 @@ body {
     color: #2ecc71;
 }
 
+/* ===== PANEL ALERTS STRIP (Hoy / 5 Días) ===== */
+.panel-alerts-strip {
+    display: none;
+    width: 100%;
+    z-index: 5;
+    position: relative;
+    overflow: hidden;
+}
+
+.panel-alerts-strip.has-alerts {
+    display: block;
+}
+
+.alerts-strip-item {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(10px, 0.8vw, 18px);
+    padding: clamp(8px, 0.6vw, 16px) clamp(16px, 1.5vw, 32px);
+    animation: alertFadeIn 0.5s ease;
+}
+
+.alerts-strip-item.alerts-strip-active {
+    display: flex;
+}
+
+@keyframes alertFadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.alerts-strip-icon {
+    font-size: clamp(20px, 1.8vw, 36px);
+    line-height: 1;
+    color: #fff;
+}
+
+.alerts-strip-icon svg {
+    width: clamp(20px, 1.8vw, 36px);
+    height: clamp(20px, 1.8vw, 36px);
+    stroke: #fff;
+}
+
+.alerts-strip-text {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(14px, 1.3vw, 28px);
+    font-weight: 800;
+    letter-spacing: clamp(2px, 0.2vw, 5px);
+    color: #fff;
+    text-transform: uppercase;
+}
+
+.alerts-strip-expires {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(11px, 1vw, 22px);
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: clamp(0.5px, 0.1vw, 2px);
+    text-transform: uppercase;
+}
+
+.alerts-strip-severity {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(10px, 0.8vw, 18px);
+    font-weight: 700;
+    padding: clamp(3px, 0.25vw, 6px) clamp(10px, 0.8vw, 16px);
+    border-radius: 4px;
+    color: #fff;
+    letter-spacing: 1px;
+}
+
+/* Severity background colors for strip */
+.alerts-strip-item[data-severity="Extreme"] {
+    background: rgba(139, 0, 0, 0.85);
+}
+.alerts-strip-item[data-severity="Severe"] {
+    background: rgba(178, 34, 34, 0.85);
+}
+.alerts-strip-item[data-severity="Moderate"] {
+    background: rgba(139, 105, 20, 0.85);
+}
+.alerts-strip-item[data-severity="Minor"] {
+    background: rgba(45, 80, 22, 0.85);
+}
+.alerts-strip-item[data-severity="Unknown"] {
+    background: rgba(26, 48, 80, 0.85);
+}
+
 /* ===== PANEL: CURRENT (DÍA / NOCHE cards) ===== */
 #panel-current { padding: 0; }
 
@@ -723,6 +811,53 @@ body {
     font-weight: 800;
     color: rgba(255,255,255,0.85);
     text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+/* ===== FORECAST CARD ALERT INDICATORS ===== */
+.fc-alert-indicator {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+}
+
+.fc-alert-badge {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(3px, 0.3vw, 6px);
+    padding: clamp(3px, 0.25vw, 6px) clamp(6px, 0.5vw, 10px);
+    border-radius: 4px;
+    width: 100%;
+    animation: fcAlertFadeIn 0.4s ease;
+}
+
+.fc-alert-badge.fc-alert-active {
+    display: flex;
+}
+
+@keyframes fcAlertFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.fc-alert-badge-icon {
+    font-size: clamp(10px, 0.9vw, 18px);
+    line-height: 1;
+    color: #fff;
+}
+
+.fc-alert-badge-icon svg {
+    stroke: #fff;
+}
+
+.fc-alert-badge-text {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(7px, 0.5vw, 12px);
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: clamp(0.5px, 0.05vw, 1px);
+    text-align: center;
+    line-height: 1.2;
 }
 
 /* ===== MAPS ===== */
